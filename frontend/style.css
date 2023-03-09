@@ -1,0 +1,47 @@
+.button {
+    margin-left: 10px;
+    margin-right: 10px;
+    color: #fff;
+    border: none;
+    border-radius: 0.4rem;
+    font-size: 13px;
+    font-weight: 600;
+    height: 30px;
+    padding-left: 1rem;
+    padding-right: 1rem;
+    text-align: center;
+    text-decoration: none;
+    line-height: 19.5px;
+    text-size-adjust: 100%;
+}
+
+.add-to-favorite-button {
+    background-color: #9147ff;
+}
+
+.remove-from-favorite-button {
+    background-color: #cf2f06;
+}
+
+.button:hover {
+    cursor: pointer;
+}
+
+.add-button:hover {
+    background-color: #772ce8; 
+}
+
+.remove-button:hover {
+    background-color: #721b05; 
+}
+
+.clip-img img{
+    width: 250px;
+    height: 150px;
+
+}
+
+/* iframe {
+    width: 480px;
+    min-height: 272px;
+  } */
