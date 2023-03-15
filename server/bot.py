@@ -50,15 +50,6 @@ class Clips(db.Model):
         self.created_at = created_at
         self.clip_url = clip_url
         
-    
-# bot = commands.Bot(
-#     token=os.environ['CLIENT_SECRET'],
-#     client_id=os.environ['CLIENT_ID'],
-#     nick=os.environ['BOT_NICKNAME'],
-#     prefix=os.environ['BOT_PREFIX'],
-#     channel=os.environ['CHANNEL'],
-
-# )
 
 client_id=os.getenv('CLIENT_ID')
 client_secret=os.getenv('CLIENT_SECRET')
@@ -166,8 +157,15 @@ def remove_clip_from_favorites():
 
 @app.route('/favorite_clips/<user_id>', methods=['GET'])
 def get_favorite_clips(user_id):
-    clips = Clips.query.filter_by(user_id=user_id).all()
+    # clips = Clips.query.filter_by(user_id=user_id).all()
 
+    page = request.args.get('page', default=1, type=int)
+    clips_per_page = request.args.get('per_page', default=8, type=int)
+    
+    start_index = (page - 1) * clips_per_page
+    end_index = start_index + clips_per_page
+
+    clips = Clips.query.filter_by(user_id=user_id).order_by(Clips.id.desc()).slice(start_index, end_index).all()
     clip_list = []
     for clip in clips:
         clip_dict = {
@@ -198,9 +196,12 @@ def is_user_clip_in_favorites():
     else:
         return jsonify({'result': False})
 
-# save_clip_to_favorites('StylishAmericanSmoothieBrokeBack-9ceFj_Vx5GtSeC_c')
 
-
+@app.route('/favorite_clips/count/<user_id>', methods=['GET'])
+def favorite_clip_count(user_id):
+    ClipCount = db.session.query(Clips).count()
+    return jsonify({'value': ClipCount})
+    
 
 # create db
 with app.app_context():
