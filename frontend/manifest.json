@@ -18,10 +18,10 @@
     }
   ],
   "action": {
-    "default_icon": "icon.png",
-    "default_title": "My Sample Extension",
-    "default_popup": "popup.html",
-    "css": ["style.css"]
+		"default_icon": "icon.png",
+		"default_title": "My Sample Extension",
+		"default_popup": "popup.html",
+		"css": ["style.css"]
   }
 
 }
