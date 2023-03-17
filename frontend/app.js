@@ -1,7 +1,6 @@
 // Layout-sc-1xcs6mc-0 hTjGax
 // Layout-sc-1xcs6mc-0 faJCen
 
-
 function getClipId() {
 	// const clipUrl = window.location.href
 	let clipUrl = window.location.href;
@@ -33,17 +32,33 @@ function waitForElm(selector) {
 async function addButton() {
 	const clipId = getClipId();
 	console.log("clipId", clipId);
-	if (!clipId) return;
+	// if (!clipId) return;
 	const userId = "test2"; //to change
 
 	//check if clip is already in fav list
 	const response = await isUserClipInFavorites(userId, clipId);
-	const container = await waitForElm(".Layout-sc-1xcs6mc-0.jJplWu");
+	const container1 = await waitForElm(".Layout-sc-1xcs6mc-0.jJplWu");
+
+	// const container2 = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
+
+	const publishButton = await waitForElm("button.ScCoreButtonPrimary-sc-ocjdkq-1");
+
+	publishButton.addEventListener("click", async function () {
+		const inputElement = await waitForElm(".ScInputBase-sc-vu7u7d-0.ScInput-sc-19xfhag-0.gXVFsI.iXedIZ.InjectLayout-sc-1i43xsx-0.gWmDFd.tw-input");
+
+		console.log("inputElement", inputElement);
+		const clipUrl = inputElement.value;
+
+		const clipId = clipUrl.split("/")[3];
+
+		console.log("clipUrl", clipUrl);
+		console.log("clipId123", clipId);
+	});
 
 	if (response.result) {
-		removeFromFavoriteButton(userId, clipId, container);
+		removeFromFavoriteButton(userId, clipId, container1);
 	} else {
-		addToFavoriteButton(userId, clipId, container);
+		addToFavoriteButton(userId, clipId, container1);
 	}
 }
 
@@ -64,9 +79,7 @@ async function addToFavoriteButton(userId, clipId, container) {
 				removeFromFavoriteButton(userId, clipId, container);
 			})
 			.catch((error) => console.error(error));
-		
 	});
-	
 
 	// console.log("container", container)
 
@@ -159,78 +172,74 @@ async function getClipCount(userId) {
 
 function loadPage() {
 	document.getElementById("clips-container").innerHTML = ""; // clear container
-	
+
 	const prevButton = document.getElementById("prev-btn");
 	const nextButton = document.getElementById("next-btn");
 	prevButton.disabled = currentPage === 1;
 	nextButton.disabled = currentPage === totalPages;
 	displayFavoriteClips("test2");
-
 }
 
-async function displayPagination(totalPages) {
+function displayPagination(totalPages) {
 	const paginationContainer = document.getElementById("pagination-container");
-	paginationContainer.innerHTML = ""; // clear pagination
-  
-	// const paginationList = document.createElement("ul");
-	// const paginationList = document.querySelector(".pagination")
-	// paginationList.classList.add("pagination");
-	
-	let paginationList = document.getElementsByClassName("pagination")
-	
-	alert(paginationList)
+	// paginationContainer.innerHTML = ""; // clear pagination
 
+	const paginationList = document.getElementsByClassName("pagination")[0];
+	paginationList.innerHTML = "";
+
+	console.log(paginationList);
+	console.log(paginationList[0]);
 
 	const prevButton = document.createElement("button");
 	prevButton.innerHTML = `<span aria-hidden="true">&laquo;</span>`;
 	prevButton.classList.add("page-link");
 	prevButton.disabled = currentPage === 1;
 	prevButton.id = "prev-btn";
-  
+
 	const nextButton = document.createElement("button");
 	nextButton.innerHTML = `<span aria-hidden="true">&raquo;</span>`;
 	nextButton.classList.add("page-link");
 	nextButton.disabled = currentPage === totalPages;
 	nextButton.id = "next-btn";
-  
+
 	for (let i = 1; i <= totalPages; i++) {
-	  const pageButton = document.createElement("button");
-	  pageButton.innerText = i;
-	  pageButton.classList.add("page-link");
-	  if (i === currentPage) {
-		pageButton.classList.add("active");
-	  }
-	  pageButton.addEventListener("click", () => {
-		currentPage = i;
-		loadPage();
-	  });
-	  const listItem = document.createElement("li");
-	  listItem.classList.add("page-item");
-	  listItem.appendChild(pageButton);
-	  paginationList.appendChild(listItem);
+		const pageButton = document.createElement("button");
+		pageButton.innerText = i;
+		pageButton.classList.add("page-link");
+		if (i === currentPage) {
+			pageButton.classList.add("active");
+		}
+		pageButton.addEventListener("click", () => {
+			currentPage = i;
+			loadPage();
+		});
+		const listItem = document.createElement("li");
+		listItem.classList.add("page-item");
+		listItem.appendChild(pageButton);
+		paginationList.appendChild(listItem);
 	}
-  
+
 	prevButton.addEventListener("click", () => {
-	  currentPage--;
-	  loadPage();
+		currentPage--;
+		loadPage();
 	});
-  
+
 	nextButton.addEventListener("click", () => {
-	  currentPage++;
-	  loadPage();
+		currentPage++;
+		loadPage();
 	});
-  
+
 	const paginationListItemPrev = document.createElement("li");
 	paginationListItemPrev.classList.add("page-item");
 	paginationListItemPrev.appendChild(prevButton);
-  
+
 	const paginationListItemNext = document.createElement("li");
 	paginationListItemNext.classList.add("page-item");
 	paginationListItemNext.appendChild(nextButton);
-  
+
 	paginationList.prepend(paginationListItemPrev);
 	paginationList.appendChild(paginationListItemNext);
-  
+
 	paginationContainer.appendChild(paginationList);
 }
 
@@ -272,7 +281,7 @@ async function removeClipInPopup(userId, clipId, container) {
 	const removeFromFavorite = document.createElement("button");
 
 	removeFromFavorite.innerText = "X";
-	removeFromFavorite.classList .add("button", "remove-from-favorite-button");
+	removeFromFavorite.classList.add("button", "remove-from-favorite-button");
 
 	removeFromFavorite.addEventListener("click", () => {
 		console.log(`Removing clip ${clipId} from favorites!`);
@@ -295,8 +304,6 @@ addButton();
 let currentPage = 1;
 const clipsPerPage = 8;
 
-
-
 // let clipCount = await getClipCount("test2")
 // // let clipCount = 11
 // let totalPages = Math.ceil(clipCount / clipsPerPage);
@@ -304,11 +311,12 @@ const clipsPerPage = 8;
 // displayPagination(totalPages)
 // loadPage()
 
-let totalPages
+let totalPages;
 
 getClipCount("test2").then((clipCount) => {
 	totalPages = Math.ceil(clipCount.value / clipsPerPage);
 	displayPagination(totalPages);
 	loadPage();
 });
+
 
