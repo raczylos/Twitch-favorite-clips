@@ -173,10 +173,27 @@ async function getClipCount(userId) {
 function loadPage() {
 	document.getElementById("clips-container").innerHTML = ""; // clear container
 
-	const prevButton = document.getElementById("prev-btn");
-	const nextButton = document.getElementById("next-btn");
-	prevButton.disabled = currentPage === 1;
-	nextButton.disabled = currentPage === totalPages;
+	// const prevButton = document.getElementById("prev-btn");
+	// const nextButton = document.getElementById("next-btn");
+
+	const prevItem = document.getElementById("prev-btn-li");
+	const nextItem = document.getElementById("next-btn-li");
+	
+	prevItem.disabled = currentPage === 1;
+	nextItem.disabled = currentPage === totalPages;
+	if(currentPage === 1) {
+		prevItem.classList.add("disabled")
+	} else {
+		prevItem.classList.remove("disabled")
+	}
+
+	if(currentPage === totalPages) {
+		nextItem.classList.add("disabled")
+	} else {
+		nextItem.classList.remove("disabled")
+	}
+	// prevButton.disabled = currentPage === 1;
+	// nextButton.disabled = currentPage === totalPages;
 	displayFavoriteClips("test2");
 }
 
@@ -187,54 +204,85 @@ function displayPagination(totalPages) {
 	const paginationList = document.getElementsByClassName("pagination")[0];
 	paginationList.innerHTML = "";
 
-	console.log(paginationList);
-	console.log(paginationList[0]);
-
 	const prevButton = document.createElement("button");
 	prevButton.innerHTML = `<span aria-hidden="true">&laquo;</span>`;
 	prevButton.classList.add("page-link");
-	prevButton.disabled = currentPage === 1;
+	// prevButton.disabled = currentPage === 1;
 	prevButton.id = "prev-btn";
 
 	const nextButton = document.createElement("button");
 	nextButton.innerHTML = `<span aria-hidden="true">&raquo;</span>`;
 	nextButton.classList.add("page-link");
-	nextButton.disabled = currentPage === totalPages;
+	// nextButton.disabled = currentPage === totalPages;
 	nextButton.id = "next-btn";
 
 	for (let i = 1; i <= totalPages; i++) {
+
 		const pageButton = document.createElement("button");
 		pageButton.innerText = i;
 		pageButton.classList.add("page-link");
-		if (i === currentPage) {
-			pageButton.classList.add("active");
-		}
+		
 		pageButton.addEventListener("click", () => {
+			
+			const prevPaginationItem = document.getElementById("li-" + currentPage)
+			prevPaginationItem.classList.remove("active")
+			
 			currentPage = i;
+			listItem.classList.add("active")
 			loadPage();
 		});
 		const listItem = document.createElement("li");
 		listItem.classList.add("page-item");
+		listItem.id = "li-" + i
 		listItem.appendChild(pageButton);
+		
+		// add active state to first element in pagination
+		if(i === 1) { 
+			listItem.classList.add("active")
+		}
+
 		paginationList.appendChild(listItem);
 	}
 
 	prevButton.addEventListener("click", () => {
+
+		const prevPaginationItem = document.getElementById("li-" + currentPage)
+		prevPaginationItem.classList.remove("active")
+
 		currentPage--;
+
+		const currentPaginationItem = document.getElementById("li-" + currentPage)
+		currentPaginationItem.classList.add("active")
+
 		loadPage();
 	});
 
 	nextButton.addEventListener("click", () => {
+
+		const prevPaginationItem = document.getElementById("li-" + currentPage)
+		prevPaginationItem.classList.remove("active")
+
 		currentPage++;
+
+		const currentPaginationItem = document.getElementById("li-" + currentPage)
+		currentPaginationItem.classList.add("active")
+
 		loadPage();
 	});
 
 	const paginationListItemPrev = document.createElement("li");
 	paginationListItemPrev.classList.add("page-item");
+	if(currentPage === 1) {
+		paginationListItemPrev.classList.add("disabled")
+	}
+	
+	// paginationListItemPrev.classList.remove("disabled")
+	paginationListItemPrev.id = "prev-btn-li"
 	paginationListItemPrev.appendChild(prevButton);
 
 	const paginationListItemNext = document.createElement("li");
 	paginationListItemNext.classList.add("page-item");
+	paginationListItemNext.id = "next-btn-li"
 	paginationListItemNext.appendChild(nextButton);
 
 	paginationList.prepend(paginationListItemPrev);
