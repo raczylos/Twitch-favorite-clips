@@ -59,34 +59,31 @@ def get_app_access_token(client_id, client_secret):
     url = 'https://id.twitch.tv/oauth2/token'
     data = {'client_id': client_id,
             'client_secret': client_secret,
-            # 'redirect_uri': 'client_credentials',
             'grant_type': 'client_credentials'}
     response = requests.post(url, data=data)
     access_token = response.json()['access_token']
 
     return access_token
 
-def get_user_access_token(client_id, client_secret):
+
+@app.route('/get_user_token', methods=['GET'])
+def get_user_tokens():
+    code = request.args.get('code')
+    
     url = 'https://id.twitch.tv/oauth2/token'
     data = {'client_id': client_id,
             'client_secret': client_secret,
-            'redirect_uri': 'client_credentials',
-            'grant_type': 'client_credentials'}
+            'code': code,
+            'redirect_uri': "http://localhost:5000/authorize",
+            'grant_type': 'authorization_code'}
     response = requests.post(url, data=data)
-    access_token = response.json()['access_token']
+    tokens = response.json()
+    print("access_token", tokens)
+    return tokens
 
-    return access_token
+app_access_token= get_app_access_token(client_id, client_secret)
 
-access_token= get_app_access_token(client_id, client_secret)
-
-
-
-
-# params = {'login': 'zycieszymona'}
-# params = {'login': 'Lightt__'}
-
-# Dodanie nagłówka z kluczem dostępu
-headers = {'Client-ID': client_id, 'Authorization': f'Bearer {access_token}'}
+headers = {'Client-ID': client_id, 'Authorization': f'Bearer {app_access_token}'}
 
 
     
@@ -98,8 +95,6 @@ def get_user(user_name, headers):
 
     return response.json()
 
-# user = get_user("mamm0n", headers)
-# user_id = user['data'][0]['id']
 
 def get_clip_info(clip_id):
     url = 'https://api.twitch.tv/helix/clips?id=' + clip_id
@@ -199,14 +194,67 @@ def is_user_clip_in_favorites():
 
 @app.route('/favorite_clips/count/<user_id>', methods=['GET'])
 def favorite_clip_count(user_id):
-    ClipCount = db.session.query(Clips).count()
-    return jsonify({'value': ClipCount})
+    clipCount = db.session.query(Clips).filter(Clips.user_id == user_id).count()
+    return jsonify({'value': clipCount})
+
+
+@app.route('/favorite_clips/search/count/<user_id>', methods=['GET'])
+def search_favorite_clip_count(user_id):
+    query = request.args.get('query')
+    clipCount = db.session.query(Clips).filter((Clips.user_id == user_id) &
+                                               Clips.clip_title.ilike(f'%{query}%') | 
+                                               Clips.creator_name.ilike(f'%{query}%') | 
+                                               Clips.broadcaster_name.ilike(f'%{query}%')).count()
     
+    print ("clipCount new", clipCount)
+    return jsonify({'value': clipCount})
+
+
+# add user-id to this function
+@app.route('/favorite_clips/search', methods=['GET'])
+def search_clips():
+    query = request.args.get('query')
+    clips = Clips.query.filter(
+        Clips.clip_title.ilike(f'%{query}%') | 
+        Clips.creator_name.ilike(f'%{query}%') | 
+        Clips.broadcaster_name.ilike(f'%{query}%')
+    ).all()
+    clip_list = []
+    for clip in clips:
+        clip_dict = {
+            'clip_id': clip.clip_id,
+            'user_id': clip.user_id,
+            'creator_name': clip.creator_name,
+            'broadcaster_name': clip.broadcaster_name,
+            'clip_title': clip.clip_title,
+            'clip_duration': clip.clip_duration,
+            'thumbnail_url': clip.thumbnail_url,
+            'created_at': clip.created_at,
+            'clip_url': clip.clip_url,
+        }
+        clip_list.append(clip_dict)
+        print("clip_list", clip_list)
+    return jsonify(clip_list)
+
+
+
+@app.route('/authorize', methods=['GET'])
+def authorize():
+    code = request.args.get('code')
+    
+    print(code)
+    return jsonify(code)
+
 
 # create db
 with app.app_context():
     db.create_all()
 
-if __name__ == '__main__':
-    app.run(debug=True)
 
+
+
+if __name__ == '__main__':
+    app.run(host='localhost', debug=True)
+    
+
+# flask --app bot  run --cert=cert.pem --key=key.pem

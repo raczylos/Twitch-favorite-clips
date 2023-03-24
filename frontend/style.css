@@ -96,8 +96,10 @@ html, body {
     align-self: center;
 }
 
+#search-input {
+    width: 200px;
+    
+}
 
-/* iframe {
-    width: 480px;
-    min-height: 272px;
-  } */
+
+
