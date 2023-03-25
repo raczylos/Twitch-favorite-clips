@@ -66,7 +66,7 @@ def get_app_access_token(client_id, client_secret):
     return access_token
 
 
-@app.route('/get_user_token', methods=['GET'])
+@app.route('/get_user_tokens', methods=['GET'])
 def get_user_tokens():
     code = request.args.get('code')
     
@@ -78,7 +78,21 @@ def get_user_tokens():
             'grant_type': 'authorization_code'}
     response = requests.post(url, data=data)
     tokens = response.json()
-    print("access_token", tokens)
+    
+    return tokens
+
+@app.route('/refresh_access_token', methods=['GET'])
+def refresh_access_token():
+    refresh_token = request.args.get('refresh_token')
+
+    url = 'https://id.twitch.tv/oauth2/token'
+    data = {'client_id': client_id,
+            'client_secret': client_secret,
+            'grant_type': "refresh_token",
+            'refresh_token': refresh_token}
+    response = requests.post(url, data=data)
+    tokens = response.json()
+    
     return tokens
 
 app_access_token= get_app_access_token(client_id, client_secret)
@@ -87,13 +101,17 @@ headers = {'Client-ID': client_id, 'Authorization': f'Bearer {app_access_token}'
 
 
     
+@app.route('/get_user_info', methods=['GET'])
+def get_user_info():
+    access_token = request.args.get('access_token')
 
-def get_user(user_name, headers):
     url = 'https://api.twitch.tv/helix/users'
-    params = {'login': user_name}
-    response = requests.get(url, params=params, headers=headers)
 
-    return response.json()
+    headers = {'Authorization': f'Bearer {access_token}','Client-ID': client_id}
+    
+    response = requests.get(url, headers=headers)
+
+    return response.json()['data'][0]
 
 
 def get_clip_info(clip_id):
@@ -116,7 +134,7 @@ def add_clip_to_favorites():
     clip_info = get_clip_info(clip_id)['data'][0]
     creator_name = clip_info['creator_name']
     broadcaster_name = clip_info['broadcaster_name']
-    creator_info = get_user(creator_name, headers)
+    # creator_info = get_user(creator_name, headers)
     clip_title = clip_info['title']
     clip_duration = clip_info['duration']
     thumbnail_url = clip_info['thumbnail_url']
@@ -237,13 +255,17 @@ def search_clips():
     return jsonify(clip_list)
 
 
+@app.route('/client_id', methods=['GET'])
+def get_client_id():
+    
+    return jsonify(client_id)
 
 @app.route('/authorize', methods=['GET'])
 def authorize():
     code = request.args.get('code')
-    
-    print(code)
-    return jsonify(code)
+    if(code):
+        return "Logged in successfully. You can close this page."
+    return "Something went wrong. Try again."
 
 
 # create db

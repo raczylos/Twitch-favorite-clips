@@ -33,7 +33,8 @@ async function addButton() {
 	const clipId = getClipId();
 	console.log("clipId", clipId);
 	// if (!clipId) return;
-	const userId = "test2"; //to change
+
+	// const userId = "test2"; //to change
 
 	//check if clip is already in fav list
 	const response = await isUserClipInFavorites(userId, clipId);
@@ -170,6 +171,19 @@ async function getClipCount(userId) {
 	return clipCount.value;
 }
 
+async function getClientId() {
+	const url = `http://127.0.0.1:5000/client_id`;
+
+	const response = await fetch(url, {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
+	const client_id = await response.json();
+	return client_id;
+}
+
 async function searchFavoriteClips(userId, query) {
 	const url = `http://127.0.0.1:5000/favorite_clips/search?query=${query}`;
 
@@ -196,8 +210,21 @@ async function searchFavoriteClipCount(userId, query) {
 	return clipCount.value;
 }
 
-async function getAuthorizeCode() {
-	const url = `http://127.0.0.1:5000/authorize`;
+// async function getAuthorizeCode() {
+// 	const url = `http://127.0.0.1:5000/authorize`;
+
+// 	const response = await fetch(url, {
+// 		method: "GET",
+// 		headers: {
+// 			"Content-Type": "application/json",
+// 		},
+// 	});
+// 	const code = await response.json();
+// 	return code;
+// }
+
+async function getUserTokens(code) {
+	const url = `http://127.0.0.1:5000/get_user_tokens?code=${code}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -205,12 +232,12 @@ async function getAuthorizeCode() {
 			"Content-Type": "application/json",
 		},
 	});
-	const code = await response.json();
-	return code;
+	const tokens = await response.json();
+	return tokens;
 }
 
-async function getUserAccessToken(code) {
-	const url = `http://127.0.0.1:5000/get_user_token?code=${code}`;
+async function refreshAccessToken(refreshToken) {
+	const url = `http://127.0.0.1:5000/refresh_access_token?refresh_token=${refreshToken}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -218,8 +245,21 @@ async function getUserAccessToken(code) {
 			"Content-Type": "application/json",
 		},
 	});
-	const accessToken = await response.json();
-	return accessToken;
+	const newTokens = await response.json();
+	return newTokens;
+}
+
+async function getUserInfo(accessToken) {
+	const url = `http://127.0.0.1:5000/get_user_info?access_token=${accessToken}`;
+
+	const response = await fetch(url, {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
+	const userInfo = await response.json();
+	return userInfo;
 }
 
 function loadPage(searchQuery) {
@@ -242,7 +282,7 @@ function loadPage(searchQuery) {
 		nextItem.classList.remove("disabled");
 	}
 
-	displayFavoriteClips("test2", searchQuery);
+	displayFavoriteClips(userId, searchQuery);
 }
 
 function displayPagination(totalPages, searchQuery) {
@@ -396,26 +436,13 @@ async function removeClipInPopup(userId, clipId, container) {
 	container.appendChild(removeFromFavorite);
 }
 
-addButton();
-
-let currentPage = 1;
-const clipsPerPage = 8;
-
-let totalPages;
-
-getClipCount("test2").then((clipCount) => {
-	totalPages = Math.ceil(clipCount / clipsPerPage);
-	displayPagination(totalPages);
-	loadPage();
-});
-
 const searchButton = document.getElementById("search-button");
 searchButton.addEventListener("click", async () => {
 	event.preventDefault();
 	currentPage = 1;
 
 	const searchQuery = document.getElementById("search-input");
-	let clipCount = await searchFavoriteClipCount("test2", searchQuery.value);
+	let clipCount = await searchFavoriteClipCount(userId, searchQuery.value);
 	let totalPages = Math.ceil(clipCount / clipsPerPage);
 
 	displayPagination(totalPages, searchQuery.value);
@@ -430,23 +457,33 @@ resetButton.addEventListener("click", async () => {
 	loadPage();
 });
 
-const clientId = "h8qj5gj9exsfa49izsqdx98qe6lo4m";
-// const redirectUri = "client_credentials";
-const redirectUri = "http://localhost:5000/authorize";
+async function getUsername(accessToken) {
+	
+	const userInfo = await getUserInfo(accessToken)
+	const username = userInfo.display_name
+	
 
-const responseType = "code";
-const scope = "user:read:email";
-
-const clientSecret = "ebydp8cbzebweqqkbbbm0h1knqttkq";
+	return username
+}
 
 async function login(code) {
 	// const code = await getAuthorizeCode()
-	const access_token = await getUserAccessToken(code);
-	console.log("access_token", access_token);
+	const tokens = await getUserTokens(code);
+	console.log(tokens);
+	if(tokens){
+		localStorage.setItem('accessToken', tokens.access_token);
+		localStorage.setItem('refreshToken', tokens.refresh_token);
+	}
 }
 
 const loginButton = document.getElementById("login-button");
-loginButton.addEventListener("click", () => {
+loginButton.addEventListener("click", async () => {
+	const clientId = await getClientId()
+	const redirectUri = "http://localhost:5000/authorize";
+
+	const responseType = "code";
+	const scope = "user:read:email";
+
 	const popupWindow = window.open(
 		`https://id.twitch.tv/oauth2/authorize?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}`,
 		"_blank",
@@ -468,4 +505,35 @@ loginButton.addEventListener("click", () => {
 
 	chrome.tabs.onUpdated.addListener(authorizationHook);
 });
+
+
+const accessToken = localStorage.getItem('accessToken');
+
+console.log("accessToken", accessToken)
+
+// const userId = getUsername(accessToken)
+
+
+
+
+let currentPage = 1;
+const clipsPerPage = 8;
+
+let totalPages;
+
+
+let userId
+getUsername(accessToken).then((username) => {
+
+
+	userId = username
+	
+	addButton();
+
+	getClipCount(userId).then((clipCount) => {
+		totalPages = Math.ceil(clipCount / clipsPerPage);
+		displayPagination(totalPages);
+		loadPage();
+	});
+})
 
