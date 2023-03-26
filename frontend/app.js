@@ -452,6 +452,8 @@ searchButton.addEventListener("click", async () => {
 const resetButton = document.getElementById("reset-button");
 resetButton.addEventListener("click", async () => {
 	event.preventDefault();
+	const searchQuery = document.getElementById("search-input");
+	searchQuery.value = ""
 	currentPage = 1;
 	displayPagination(totalPages);
 	loadPage();
@@ -459,12 +461,31 @@ resetButton.addEventListener("click", async () => {
 
 async function getUsername(accessToken) {
 	
+	if(!accessToken){
+		return null
+	}
 	const userInfo = await getUserInfo(accessToken)
-	const username = userInfo.display_name
+	if(userInfo.status === 401){
+		const refreshToken = localStorage.getItem("refreshToken");
+		const newTokens = await refreshAccessToken(refreshToken);
+		if(newTokens.status === 401) {
+			localStorage.removeItem("accessToken")
+			localStorage.removeItem("refreshToken")
+			return 
+		}
+		
+		localStorage.setItem("accessToken", newTokens.access_token);
+        localStorage.setItem("refreshToken", newTokens.refresh_token);
+		const newAccessToken = newTokens.access_token
+		return await getUsername(newAccessToken)
+	}
 	
-
+	const username = userInfo.display_name
 	return username
+	
 }
+
+
 
 async function login(code) {
 	// const code = await getAuthorizeCode()
@@ -473,6 +494,7 @@ async function login(code) {
 	if(tokens){
 		localStorage.setItem('accessToken', tokens.access_token);
 		localStorage.setItem('refreshToken', tokens.refresh_token);
+		initPage(tokens.access_token)
 	}
 }
 
@@ -496,8 +518,8 @@ loginButton.addEventListener("click", async () => {
 				let url = tab.url;
 				let code = url.substring(url.indexOf("code=") + 5, url.indexOf("&scope"));
 				login(code);
-
 				popupWindow.close();
+				
 				chrome.tabs.onUpdated.removeListener(authorizationHook);
 			}
 		}
@@ -507,33 +529,61 @@ loginButton.addEventListener("click", async () => {
 });
 
 
+
 const accessToken = localStorage.getItem('accessToken');
-
-console.log("accessToken", accessToken)
-
-// const userId = getUsername(accessToken)
-
-
-
 
 let currentPage = 1;
 const clipsPerPage = 8;
 
 let totalPages;
 
-
 let userId
-getUsername(accessToken).then((username) => {
 
+function initPage(accessToken) {
+	showSpinner();
 
-	userId = username
+	document.querySelector('.show-when-logged-out').style.display = 'none';
+	document.querySelector('.show-when-logged-in').style.display = 'none';
+
+	console.log("jestem w init page")
+	getUsername(accessToken).then((username) => {
+		console.log("jestem w init page1")
+		console.log("username", username)
+		if(!username){
+			console.log("jestem w init page2")
+			hideSpinner();
+			document.querySelector('.show-when-logged-out').style.display = 'block';
+			document.querySelector('.show-when-logged-in').style.display = 'none';
+			
+			return null
+		}
+		
 	
-	addButton();
+		userId = username
+		addButton();
+	
+		getClipCount(userId).then((clipCount) => {
+			totalPages = Math.ceil(clipCount / clipsPerPage);
+			displayPagination(totalPages);
+			loadPage();
+			hideSpinner();
+			document.querySelector('.show-when-logged-out').style.display = 'none';
+			document.querySelector('.show-when-logged-in').style.display = 'block';
+		});
+	
+	})
+}
 
-	getClipCount(userId).then((clipCount) => {
-		totalPages = Math.ceil(clipCount / clipsPerPage);
-		displayPagination(totalPages);
-		loadPage();
-	});
-})
+initPage(accessToken)
 
+
+
+function showSpinner() {
+    document.getElementById("spinner").style.display = "block";
+    document.querySelector(".show-when-logged-in").style.display = "none";
+}
+
+function hideSpinner() {
+    document.getElementById("spinner").style.display = "none";
+    document.querySelector(".show-when-logged-in").style.display = "block";
+}

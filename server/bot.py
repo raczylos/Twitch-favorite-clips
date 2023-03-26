@@ -111,7 +111,12 @@ def get_user_info():
     
     response = requests.get(url, headers=headers)
 
-    return response.json()['data'][0]
+    if(response):
+        print("123")
+        return response.json()['data'][0]
+    
+    #  expecting status code 401
+    return response.json() 
 
 
 def get_clip_info(clip_id):
