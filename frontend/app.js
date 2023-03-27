@@ -498,6 +498,46 @@ async function login(code) {
 	}
 }
 
+// function showSpinner() {
+
+//     document.getElementById("spinner").style.display = "block";
+//     document.querySelector(".show-when-logged-in").style.display = "none";
+// }
+
+// function hideSpinner() {
+//     document.getElementById("spinner").style.display = "none";
+//     document.querySelector(".show-when-logged-in").style.display = "block";
+// }
+
+function hideSpinner() {
+	const spinnerWrapper = document.getElementById("spinner-wrapper");
+	const spinner = spinnerWrapper.querySelector(".spinner-border");
+  
+	if (spinner) {
+	  spinnerWrapper.remove()
+	}
+}
+  
+function showSpinner() {
+	const spinnerWrapper = document.createElement("div");
+	spinnerWrapper.id = "spinner-wrapper";
+
+	const spinner = document.createElement("div");
+	spinner.id = "spinner"
+	spinner.classList.add("spinner-border");
+	spinner.setAttribute("role", "status");
+  
+	const spinnerText = document.createElement("span");
+	spinnerText.classList.add("sr-only");
+	spinnerText.innerText = "Loading...";
+  
+	spinner.appendChild(spinnerText);
+	spinnerWrapper.appendChild(spinner);
+  
+	document.body.appendChild(spinnerWrapper);
+}
+  
+
 const loginButton = document.getElementById("login-button");
 loginButton.addEventListener("click", async () => {
 	const clientId = await getClientId()
@@ -576,14 +616,3 @@ function initPage(accessToken) {
 
 initPage(accessToken)
 
-
-
-function showSpinner() {
-    document.getElementById("spinner").style.display = "block";
-    document.querySelector(".show-when-logged-in").style.display = "none";
-}
-
-function hideSpinner() {
-    document.getElementById("spinner").style.display = "none";
-    document.querySelector(".show-when-logged-in").style.display = "block";
-}
