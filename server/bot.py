@@ -83,6 +83,7 @@ def get_user_tokens():
 
 @app.route('/refresh_access_token', methods=['GET'])
 def refresh_access_token():
+    print("refreshing token")
     refresh_token = request.args.get('refresh_token')
 
     url = 'https://id.twitch.tv/oauth2/token'
@@ -92,7 +93,7 @@ def refresh_access_token():
             'refresh_token': refresh_token}
     response = requests.post(url, data=data)
     tokens = response.json()
-    
+    print(tokens)
     return tokens
 
 app_access_token= get_app_access_token(client_id, client_secret)
@@ -112,7 +113,6 @@ def get_user_info():
     response = requests.get(url, headers=headers)
 
     if(response):
-        print("123")
         return response.json()['data'][0]
     
     #  expecting status code 401
@@ -171,8 +171,6 @@ def remove_clip_from_favorites():
     else:
         return jsonify({'success': False, 'message': 'Clip not found in favorites.'}), 404
 
-
-
 @app.route('/favorite_clips/<user_id>', methods=['GET'])
 def get_favorite_clips(user_id):
     # clips = Clips.query.filter_by(user_id=user_id).all()
@@ -182,6 +180,7 @@ def get_favorite_clips(user_id):
     
     start_index = (page - 1) * clips_per_page
     end_index = start_index + clips_per_page
+
 
     clips = Clips.query.filter_by(user_id=user_id).order_by(Clips.id.desc()).slice(start_index, end_index).all()
     clip_list = []
@@ -237,11 +236,21 @@ def search_favorite_clip_count(user_id):
 @app.route('/favorite_clips/search', methods=['GET'])
 def search_clips():
     query = request.args.get('query')
+    user_id = request.args.get('user_id')
+    page = request.args.get('page', default=1, type=int)
+    clips_per_page = request.args.get('per_page', default=8, type=int)
+    
+    start_index = (page - 1) * clips_per_page
+    end_index = start_index + clips_per_page
+    
+    # clips = Clips.query.filter_by(user_id=user_id).order_by(Clips.id.desc()).slice(start_index, end_index).all()
+
     clips = Clips.query.filter(
+        Clips.user_id == user_id,
         Clips.clip_title.ilike(f'%{query}%') | 
         Clips.creator_name.ilike(f'%{query}%') | 
         Clips.broadcaster_name.ilike(f'%{query}%')
-    ).all()
+    ).order_by(Clips.id.desc()).slice(start_index, end_index).all()
     clip_list = []
     for clip in clips:
         clip_dict = {
@@ -256,7 +265,8 @@ def search_clips():
             'clip_url': clip.clip_url,
         }
         clip_list.append(clip_dict)
-        print("clip_list", clip_list)
+        
+    print([clip['clip_title'] for clip in clip_list])
     return jsonify(clip_list)
 
 

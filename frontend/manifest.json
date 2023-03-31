@@ -10,7 +10,7 @@
     "storage"
   ],
 
-  "content_scripts": [
+  "content_scripts": [  
     {
       "matches": ["https://clips.twitch.tv/*"],
       "js": ["app.js"],

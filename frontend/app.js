@@ -75,10 +75,12 @@ function waitForElm(selector) {
 	});
 }
 
-async function addButton() {
+async function addButton(userId) {
 	const clipId = getClipId();
 	console.log("clipId", clipId);
 	// if (!clipId) return;
+	if (!userId) {
+	}
 
 	//check if clip is already in fav list
 	const response = await isUserClipInFavorites(userId, clipId);
@@ -114,6 +116,12 @@ async function addToFavoriteButton(userId, clipId, container) {
 	favoriteButton.classList.add("button", "add-to-favorite-button");
 
 	favoriteButton.addEventListener("click", () => {
+		if (!userId) {
+			alert("Please login in the extension popup to add clip to favorite and then refresh the page.");
+
+			return;
+		}
+
 		console.log(`Adding clip ${clipId} to favorites!`);
 		addClip(userId, clipId)
 			.then((response) => {
@@ -151,65 +159,56 @@ async function removeFromFavoriteButton(userId, clipId, container) {
 	container.appendChild(removeFromFavorite);
 }
 
-
-
-
-
-
 async function getUsername(accessToken) {
-	
-	if(!accessToken){
-		return null
+	if (!accessToken) {
+		return null;
 	}
-	const userInfo = await getUserInfo(accessToken)
-	if(userInfo.status === 401){
+	const userInfo = await getUserInfo(accessToken);
+	if (userInfo.status === 401) {
 		// const refreshToken = localStorage.getItem("refreshToken");
 
 		chrome.storage.local.get(["refreshToken"]).then(async (result) => {
 			console.log("Value currently is " + result.refreshToken);
-			refreshToken = result.refreshToken
-			
+			refreshToken = result.refreshToken;
+
 			const newTokens = await refreshAccessToken(refreshToken);
-			if(newTokens.status === 401) {
+			if (newTokens.status === 401) {
 				// localStorage.removeItem("accessToken")
 				// localStorage.removeItem("refreshToken")
-				return 
+				chrome.storage.local.remove(["accessToken", "refreshToken"], function () {
+					let error = chrome.runtime.lastError;
+					if (error) {
+						console.error(error);
+					}
+				});
+				return;
 			}
-			
-			// localStorage.setItem("accessToken", newTokens.access_token);
-			// localStorage.setItem("refreshToken", newTokens.refresh_token);
-	
-			chrome.storage.local.set({accessToken: newTokens.access_token}).then(() => {
-				console.log("accessToken is set to " + newTokens.access_token);
-			});
-	
-			chrome.storage.local.set({refreshToken: newTokens.refresh_token}).then(() => {
-				console.log("refreshToken is set to " + newTokens.access_token);
-			});
-	
-			const newAccessToken = newTokens.access_token
-			return await getUsername(newAccessToken)
-		});
 
+			chrome.storage.local
+				.set({
+					accessToken: newTokens.access_token,
+					refreshToken: newTokens.refresh_token,
+				})
+				.then(() => {
+					console.log("accessToken is set to " + newTokens.access_token);
+					console.log("refreshToken is set to " + newTokens.refresh_token);
+				});
+
+			const newAccessToken = newTokens.access_token;
+			return await getUsername(newAccessToken);
+		});
 	}
-	
-	const username = userInfo.display_name
-	return username
-	
+
+	const username = userInfo.display_name;
+	return username;
 }
 
-let userId
-
 chrome.storage.local.get(["accessToken"]).then((result) => {
-	console.log("Value currently is " + result.accessToken);
-	let accessToken = result.accessToken
-	getUsername(accessToken).then((username) => { 
-		userId = username
-		addButton()
-	})
-	
+	let accessToken = result.accessToken;
+	getUsername(accessToken).then((username) => {
+		let userId = username;
+		if(username) {
+			addButton(userId);
+		}
+	});
 });
-
-
-
-
