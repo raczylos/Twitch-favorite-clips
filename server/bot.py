@@ -176,7 +176,7 @@ def get_favorite_clips(user_id):
     # clips = Clips.query.filter_by(user_id=user_id).all()
 
     page = request.args.get('page', default=1, type=int)
-    clips_per_page = request.args.get('per_page', default=8, type=int)
+    clips_per_page = request.args.get('clips_per_page', type=int)
     
     start_index = (page - 1) * clips_per_page
     end_index = start_index + clips_per_page
@@ -232,17 +232,20 @@ def search_favorite_clip_count(user_id):
     return jsonify({'value': clipCount})
 
 
-# add user-id to this function
+
 @app.route('/favorite_clips/search', methods=['GET'])
 def search_clips():
     query = request.args.get('query')
     user_id = request.args.get('user_id')
     page = request.args.get('page', default=1, type=int)
-    clips_per_page = request.args.get('per_page', default=8, type=int)
+    clips_per_page = request.args.get('clips_per_page', type=int)
     
     start_index = (page - 1) * clips_per_page
     end_index = start_index + clips_per_page
-    
+    print("page", page)
+    print("clips_per_page", clips_per_page)
+    print("start_index", start_index)
+    print("end_index", end_index)
     # clips = Clips.query.filter_by(user_id=user_id).order_by(Clips.id.desc()).slice(start_index, end_index).all()
 
     clips = Clips.query.filter(

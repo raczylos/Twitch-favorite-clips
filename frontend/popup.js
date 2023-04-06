@@ -46,8 +46,8 @@ async function removeClip(userId, clipId) {
 	return response.json();
 }
 
-async function getFavoriteClips(userId, page, perPage) {
-	const url = `http://127.0.0.1:5000/favorite_clips/${userId}?page=${page}&per_page=${perPage}`;
+async function getFavoriteClips(userId, page, clipsPerPage) {
+	const url = `http://127.0.0.1:5000/favorite_clips/${userId}?page=${page}&clips_per_page=${clipsPerPage}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -153,6 +153,8 @@ async function getUserInfo(accessToken) {
 function loadPage(searchQuery) {
 	document.getElementById("clips-container").innerHTML = ""; // clear container
 
+	displayFavoriteClips(userId, searchQuery);
+
 	const prevItem = document.getElementById("prev-btn-li");
 	const nextItem = document.getElementById("next-btn-li");
 
@@ -169,16 +171,82 @@ function loadPage(searchQuery) {
 	} else {
 		nextItem.classList.remove("disabled");
 	}
+}
 
-	displayFavoriteClips(userId, searchQuery);
+function createPagination(totalPages, paginationList, searchQuery) {
+	const MAX_PAGES_BEFORE_CURRENT = 2;
+	const MAX_PAGES_AFTER_CURRENT = 2;
+	const MAX_PAGES = MAX_PAGES_BEFORE_CURRENT + MAX_PAGES_AFTER_CURRENT + 1;
+
+	let pagesToAdd = [];
+
+	if (totalPages > MAX_PAGES) {
+		const start = Math.max(1, currentPage - MAX_PAGES_BEFORE_CURRENT);
+		const end = Math.min(totalPages, currentPage + MAX_PAGES_AFTER_CURRENT);
+		if (start > 1) {
+			pagesToAdd.push(1);
+			if (start > 2) {
+				pagesToAdd.push("...");
+			}
+		}
+		for (let i = start; i <= end; i++) {
+			pagesToAdd.push(i);
+		}
+		if (end < totalPages) {
+			if (end < totalPages - 1) {
+				pagesToAdd.push("...");
+			}
+			pagesToAdd.push(totalPages);
+		}
+	} else {
+		for (let i = 1; i <= totalPages; i++) {
+			pagesToAdd.push(i);
+		}
+	}
+
+	for (let i = 0; i < pagesToAdd.length; i++) {
+		const page = pagesToAdd[i];
+		const pageButton = document.createElement("button");
+		pageButton.innerText = page;
+		pageButton.classList.add("page-link");
+		
+		if (page === "...") {
+			pageButton.disabled = true;
+		} else {
+			pageButton.addEventListener("click", () => {
+				const prevPaginationItem = document.getElementById("li-" + currentPage);
+				prevPaginationItem.classList.remove("active");
+
+				currentPage = page;
+				listItem.classList.add("active");
+				loadPage(searchQuery);
+
+				displayPagination(totalPages, searchQuery);
+			});
+		}
+
+		const listItem = document.createElement("li");
+		listItem.classList.add("page-item");
+		listItem.id = "li-" + page;
+		if (page === currentPage) {
+			listItem.classList.add("active");
+		}
+		listItem.appendChild(pageButton);
+		paginationList.appendChild(listItem);
+	}
 }
 
 function displayPagination(totalPages, searchQuery) {
 	const paginationContainer = document.getElementById("pagination-container");
-	// paginationContainer.innerHTML = ""; // clear pagination
 
 	const paginationList = document.getElementsByClassName("pagination")[0];
-	paginationList.innerHTML = "";
+	paginationList.innerHTML = ""; //clear pagination
+
+	createPagination(totalPages, paginationList, searchQuery);
+
+	if (totalPages === 0) {
+		return;
+	}
 
 	const prevButton = document.createElement("button");
 	prevButton.innerHTML = `<span aria-hidden="true">&laquo;</span>`;
@@ -192,32 +260,6 @@ function displayPagination(totalPages, searchQuery) {
 	// nextButton.disabled = currentPage === totalPages;
 	nextButton.id = "next-btn";
 
-	for (let i = 1; i <= totalPages; i++) {
-		const pageButton = document.createElement("button");
-		pageButton.innerText = i;
-		pageButton.classList.add("page-link");
-
-		pageButton.addEventListener("click", () => {
-			const prevPaginationItem = document.getElementById("li-" + currentPage);
-			prevPaginationItem.classList.remove("active");
-
-			currentPage = i;
-			listItem.classList.add("active");
-			loadPage(searchQuery);
-		});
-		const listItem = document.createElement("li");
-		listItem.classList.add("page-item");
-		listItem.id = "li-" + i;
-		listItem.appendChild(pageButton);
-
-		// add active state to first element in pagination
-		if (i === 1) {
-			listItem.classList.add("active");
-		}
-
-		paginationList.appendChild(listItem);
-	}
-
 	prevButton.addEventListener("click", () => {
 		const prevPaginationItem = document.getElementById("li-" + currentPage);
 		prevPaginationItem.classList.remove("active");
@@ -228,6 +270,7 @@ function displayPagination(totalPages, searchQuery) {
 		currentPaginationItem.classList.add("active");
 
 		loadPage(searchQuery);
+		displayPagination(totalPages);
 	});
 
 	nextButton.addEventListener("click", () => {
@@ -240,6 +283,7 @@ function displayPagination(totalPages, searchQuery) {
 		currentPaginationItem.classList.add("active");
 
 		loadPage(searchQuery);
+		displayPagination(totalPages);
 	});
 
 	const paginationListItemPrev = document.createElement("li");
@@ -248,12 +292,16 @@ function displayPagination(totalPages, searchQuery) {
 		paginationListItemPrev.classList.add("disabled");
 	}
 
-	// paginationListItemPrev.classList.remove("disabled")
 	paginationListItemPrev.id = "prev-btn-li";
 	paginationListItemPrev.appendChild(prevButton);
 
 	const paginationListItemNext = document.createElement("li");
 	paginationListItemNext.classList.add("page-item");
+
+	if (currentPage === totalPages) {
+		paginationListItemNext.classList.add("disabled");
+	}
+
 	paginationListItemNext.id = "next-btn-li";
 	paginationListItemNext.appendChild(nextButton);
 
@@ -267,17 +315,25 @@ async function displayFavoriteClips(userId, searchQuery) {
 	let favoriteClips;
 
 	if (searchQuery) {
+		console.log("searchFavoriteClips", currentPage, clipsPerPage);
 		favoriteClips = await searchFavoriteClips(userId, searchQuery, currentPage, clipsPerPage);
 	} else {
 		favoriteClips = await getFavoriteClips(userId, currentPage, clipsPerPage);
 	}
 	console.log("favoriteClips", favoriteClips);
-	//TO CHANGE
+
+	const clipsContainer = document.getElementById("clips-container");
+
 	if (!favoriteClips || favoriteClips.length === 0) {
-		document.write("<h1>You don't add any clip to favorite!</h1>");
+		const noClipsMsg = document.createElement("h2");
+		noClipsMsg.textContent = "No clips found :(";
+
+		noClipsMsg.style.margin = "auto";
+
+		clipsContainer.appendChild(noClipsMsg);
 		return;
 	}
-	const clipsContainer = document.getElementById("clips-container");
+
 	favoriteClips.forEach((clip, index) => {
 		const clipContainer = document.createElement("div");
 		clipContainer.classList.add("clip-container");
@@ -334,7 +390,8 @@ function searchClickHandler() {
 		const searchQuery = document.getElementById("search-input");
 		let clipCount = await searchFavoriteClipCount(userId, searchQuery.value);
 		let totalPages = Math.ceil(clipCount / clipsPerPage);
-
+		console.log("clipCount", clipCount);
+		console.log("totalPages", totalPages);
 		displayPagination(totalPages, searchQuery.value);
 		loadPage(searchQuery.value);
 	});
@@ -353,6 +410,9 @@ function resetClickHandler() {
 }
 
 async function refreshAccessToken(refreshToken) {
+	document.querySelector(".show-when-logged-out").style.display = "none";
+	document.querySelector(".show-when-logged-in").style.display = "none";
+
 	const newTokens = await getNewRefreshedTokens(refreshToken);
 
 	if (newTokens.status === 401) {
@@ -362,7 +422,7 @@ async function refreshAccessToken(refreshToken) {
 				console.error(error);
 			}
 		});
-
+		hideSpinner();
 		return null;
 	}
 	await chrome.storage.local
@@ -375,9 +435,9 @@ async function refreshAccessToken(refreshToken) {
 			console.log("new refreshToken is set to " + newTokens.refresh_token);
 		});
 
-	const newAccessToken = newTokens.access_token;
+	// const newAccessToken = newTokens.access_token;
 
-	return newAccessToken;
+	return newTokens;
 }
 
 async function getUsername(accessToken) {
@@ -390,9 +450,10 @@ async function getUsername(accessToken) {
 		// const refreshToken = localStorage.getItem("refreshToken");
 		chrome.storage.local.get(["refreshToken"]).then(async (result) => {
 			let refreshToken = result.refreshToken;
-
+			showSpinner();
 			const newAccessToken = await refreshAccessToken(refreshToken);
 			if (newAccessToken) {
+				hideSpinner();
 				initPage(newAccessToken);
 				// location.reload()
 				return null;
@@ -487,7 +548,7 @@ function loginViaTwitch() {
 }
 
 let currentPage = 1;
-const clipsPerPage = 9;
+const clipsPerPage = 3;
 
 let totalPages;
 

@@ -47,12 +47,53 @@ async function isUserClipInFavorites(userId, clipId) {
 	return await response.json();
 }
 
+async function getNewRefreshedTokens(refreshToken) {
+	const url = `http://127.0.0.1:5000/refresh_access_token?refresh_token=${refreshToken}`;
+
+	const response = await fetch(url, {
+		method: "GET",
+		headers: {
+			"Content-Type": "application/json",
+		},
+	});
+	const newTokens = await response.json();
+	return newTokens;
+}
+
 function getClipId() {
 	// const clipUrl = window.location.href
 	let clipUrl = window.location.href;
 	let clipId = clipUrl.match(/[^/]*$/)[0];
 
 	return clipId;
+}
+
+async function refreshAccessToken(refreshToken) {
+	const newTokens = await getNewRefreshedTokens(refreshToken);
+
+	if (newTokens.status === 401) {
+		chrome.storage.local.remove(["accessToken", "refreshToken"], function () {
+			let error = chrome.runtime.lastError;
+			if (error) {
+				console.error(error);
+			}
+		});
+		hideSpinner();
+		return null;
+	}
+	await chrome.storage.local
+		.set({
+			accessToken: newTokens.access_token,
+			refreshToken: newTokens.refresh_token,
+		})
+		.then(() => {
+			console.log("new accessToken is set to " + newTokens.access_token);
+			console.log("new refreshToken is set to " + newTokens.refresh_token);
+		});
+
+	// const newAccessToken = newTokens.access_token;
+
+	return newTokens;
 }
 
 function waitForElm(selector) {
@@ -75,19 +116,27 @@ function waitForElm(selector) {
 	});
 }
 
-async function addButton(userId) {
+async function addButtonOnCreatedClip(userId) {
 	const clipId = getClipId();
-	console.log("clipId", clipId);
 	// if (!clipId) return;
-	if (!userId) {
-	}
 
 	//check if clip is already in fav list
-	const response = await isUserClipInFavorites(userId, clipId);
-	const container1 = await waitForElm(".Layout-sc-1xcs6mc-0.jJplWu");
+	const isClipInFavorites = await isUserClipInFavorites(userId, clipId);
 
-	// const container2 = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
+	const container = await waitForElm(".Layout-sc-1xcs6mc-0.jJplWu");
 
+	const addClipButtonStyle = "add-to-favorite-button-in-created-clip";
+	const removeClipButtonStyle = "remove-from-favorite-button-in-created-clip";
+
+	if (isClipInFavorites.result) {
+		removeFromFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle);
+	} else {
+		addToFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle);
+	}
+}
+
+async function addButtonWhenCreatingClip(userId) {
+	//check if clip is already in fav list
 	const publishButton = await waitForElm("button.ScCoreButtonPrimary-sc-ocjdkq-1");
 
 	publishButton.addEventListener("click", async function () {
@@ -100,20 +149,28 @@ async function addButton(userId) {
 
 		console.log("clipUrl", clipUrl);
 		console.log("clipId", clipId);
-	});
 
-	if (response.result) {
-		removeFromFavoriteButton(userId, clipId, container1);
-	} else {
-		addToFavoriteButton(userId, clipId, container1);
-	}
+		const container = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
+		container.classList.add("add-to-favorite-button-container");
+		// const container = await waitForElm(".Layout-sc-1xcs6mc-0.dphleo.clips-sidebar-info");
+		const isClipInFavorites = await isUserClipInFavorites(userId, clipId);
+
+		const addClipButtonStyle = "add-to-favorite-button-when-creating-clip";
+		const removeClipButtonStyle = "remove-from-favorite-button-when-creating-clip";
+
+		if (isClipInFavorites.result) {
+			removeFromFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle);
+		} else {
+			addToFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle);
+		}
+	});
 }
 
-async function addToFavoriteButton(userId, clipId, container) {
+async function addToFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle) {
 	const favoriteButton = document.createElement("button");
 
 	favoriteButton.innerText = "Add to favorite";
-	favoriteButton.classList.add("button", "add-to-favorite-button");
+	favoriteButton.classList.add("button", addClipButtonStyle);
 
 	favoriteButton.addEventListener("click", () => {
 		if (!userId) {
@@ -129,7 +186,7 @@ async function addToFavoriteButton(userId, clipId, container) {
 				// remove existing button
 				favoriteButton.remove();
 				// replace it with new remove button
-				removeFromFavoriteButton(userId, clipId, container);
+				removeFromFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle);
 			})
 			.catch((error) => console.error(error));
 	});
@@ -137,11 +194,11 @@ async function addToFavoriteButton(userId, clipId, container) {
 	container.appendChild(favoriteButton);
 }
 
-async function removeFromFavoriteButton(userId, clipId, container) {
+async function removeFromFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle) {
 	const removeFromFavorite = document.createElement("button");
 
 	removeFromFavorite.innerText = "remove from favorite";
-	removeFromFavorite.classList.add("button", "remove-from-favorite-button");
+	removeFromFavorite.classList.add("button", removeClipButtonStyle);
 
 	removeFromFavorite.addEventListener("click", () => {
 		console.log(`Removing clip ${clipId} from favorites!`);
@@ -151,7 +208,7 @@ async function removeFromFavoriteButton(userId, clipId, container) {
 				// remove existing button
 				removeFromFavorite.remove();
 				// replace it with new add button
-				addToFavoriteButton(userId, clipId, container);
+				addToFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle);
 			})
 			.catch((error) => console.error(error));
 	});
@@ -165,6 +222,7 @@ async function getUsername(accessToken) {
 	}
 	const userInfo = await getUserInfo(accessToken);
 	if (userInfo.status === 401) {
+		console.log("Status 401");
 		// const refreshToken = localStorage.getItem("refreshToken");
 
 		chrome.storage.local.get(["refreshToken"]).then(async (result) => {
@@ -172,6 +230,7 @@ async function getUsername(accessToken) {
 			refreshToken = result.refreshToken;
 
 			const newTokens = await refreshAccessToken(refreshToken);
+			console.log("newTokens", newTokens);
 			if (newTokens.status === 401) {
 				// localStorage.removeItem("accessToken")
 				// localStorage.removeItem("refreshToken")
@@ -207,8 +266,12 @@ chrome.storage.local.get(["accessToken"]).then((result) => {
 	let accessToken = result.accessToken;
 	getUsername(accessToken).then((username) => {
 		let userId = username;
-		if(username) {
-			addButton(userId);
+		if (username) {
+			if (window.location.href === "https://clips.twitch.tv/create") {
+				addButtonWhenCreatingClip(userId);
+			} else {
+				addButtonOnCreatedClip(userId);
+			}
 		}
 	});
 });

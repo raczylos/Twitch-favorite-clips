@@ -7,6 +7,25 @@ html, body {
   
 }
 
+.black-theme {
+    background-color: #121212;
+    
+}
+
+.bg-dark-search {
+    background-color: #161616;
+}
+
+.pagination .page-item .page-link {
+    background-color: #161616 ;
+    border-color: #272727 ;
+}
+
+.pagination .page-item.disabled .page-link {
+    background-color: #161616 ;
+    border-color: #272727 ;
+}
+
 .button {
     margin-left: 10px;
     margin-right: 10px;
@@ -20,16 +39,42 @@ html, body {
     padding-right: 1rem;
     text-align: center;
     text-decoration: none;
-    line-height: 19.5px;
-    text-size-adjust: 100%;
+    /* line-height: 19.5px; */
+    /* text-size-adjust: 100%; */
+    
 }
 
-.add-to-favorite-button {
+.add-to-favorite-button-container {
+    position: relative;
+}
+
+.add-to-favorite-button-in-created-clip {
     background-color: #9147ff;
+    width: fit-content;
 }
 
-.remove-from-favorite-button {
+.add-to-favorite-button-when-creating-clip {
+    background-color: #9147ff;
+    width: fit-content;
+    margin-bottom: 10px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.remove-from-favorite-button-in-created-clip {
     background-color: #cf2f06;
+    width: fit-content;
+    
+}
+
+.remove-from-favorite-button-when-creating-clip {
+    background-color: #cf2f06;
+    width: fit-content;
+    margin-bottom: 10px;
+    position: absolute;
+    bottom: 0;
+    right: 0;
 }
 
 .remove-from-favorite-button-in-popup {
@@ -67,6 +112,8 @@ html, body {
   }
   
 .clip-container {
+    padding-left: 6px;
+    
     flex-basis: calc(50% - 10px);
     margin: 5px;
     display: flex;
@@ -111,21 +158,9 @@ html, body {
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
+    
+    padding: 2px;
 }
-
-/* .clip-title {
-    max-width: 250px;
-    text-align: center;
-    text-overflow: ellipsis;
-    overflow: hidden;
-    display: inline-block;
-    height: 2em;
-    line-height: 1em;
-    word-wrap: break-word;
-} */
-
-
-  
 
 
 .clip-container:first-child .clip-title {
@@ -134,6 +169,7 @@ html, body {
 
 .pagination {
     padding-bottom: 10px;
+    
 }
 
 
@@ -143,4 +179,3 @@ html, body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
-  
