@@ -158,6 +158,7 @@ function loadPage(searchQuery) {
 	const prevItem = document.getElementById("prev-btn-li");
 	const nextItem = document.getElementById("next-btn-li");
 
+	console.log("currentPage", currentPage, "totalPages", totalPages);
 	prevItem.disabled = currentPage === 1;
 	nextItem.disabled = currentPage === totalPages;
 	if (currentPage === 1) {
@@ -209,7 +210,7 @@ function createPagination(totalPages, paginationList, searchQuery) {
 		const pageButton = document.createElement("button");
 		pageButton.innerText = page;
 		pageButton.classList.add("page-link");
-		
+
 		if (page === "...") {
 			pageButton.disabled = true;
 		} else {
@@ -355,18 +356,63 @@ async function displayFavoriteClips(userId, searchQuery) {
 		clipContainer.appendChild(clipLink);
 
 		removeClipInPopup(userId, clip.clip_id, clipContainer);
+		copyToClipboard(clipContainer, clip.clip_url);
 
 		clipsContainer.appendChild(clipContainer);
 	});
 }
 
+function copyToClipboard(container, url) {
+	const copyToClipboardButton = document.createElement("button");
+	const icon = document.createElement("i");
+	icon.classList.add("fa-regular", "fa-copy");
+
+	copyToClipboardButton.setAttribute("data-bs-toggle", "tooltip");
+	copyToClipboardButton.setAttribute("data-bs-placement", "top");
+	copyToClipboardButton.setAttribute("data-bs-original-title", "Copy to clipboard");
+
+	copyToClipboardButton.appendChild(icon);
+
+	copyToClipboardButton.classList.add("button", "copy-to-clipboard-button");
+
+	container.appendChild(copyToClipboardButton);
+	//init tooltip
+	let tooltip = new bootstrap.Tooltip(copyToClipboardButton);
+
+	//change tooltip title when button is clicked
+	copyToClipboardButton.addEventListener("click", () => {
+		navigator.clipboard
+			.writeText(url)
+			.then(() => {
+				copyToClipboardButton.setAttribute("data-bs-original-title", "Copied");
+
+				tooltip.show();
+
+				console.log("URL copied to clipboard!");
+			})
+			.catch((err) => {
+				console.error("Error copying URL to clipboard: ", err);
+			});
+	});
+
+	//change tooltip title to original one when tooltip disappear
+	tooltip._element.addEventListener("hidden.bs.tooltip", function () {
+		copyToClipboardButton.setAttribute("data-bs-original-title", "Copy to clipboard");
+	});
+
+	//hide tooltip after button click on mouseleave
+	tooltip._element.addEventListener("mouseleave", function () {
+		tooltip.hide();
+	});
+}
+
 async function removeClipInPopup(userId, clipId, container) {
-	const removeFromFavorite = document.createElement("button");
+	const removeFromFavoriteButton = document.createElement("button");
 
-	removeFromFavorite.innerText = "X";
-	removeFromFavorite.classList.add("button", "remove-from-favorite-button-in-popup");
+	removeFromFavoriteButton.innerText = "X";
+	removeFromFavoriteButton.classList.add("button", "remove-from-favorite-button-in-popup");
 
-	removeFromFavorite.addEventListener("click", () => {
+	removeFromFavoriteButton.addEventListener("click", () => {
 		console.log(`Removing clip ${clipId} from favorites!`);
 		removeClip(userId, clipId)
 			.then((response) => {
@@ -378,7 +424,7 @@ async function removeClipInPopup(userId, clipId, container) {
 			.catch((error) => console.error(error));
 	});
 
-	container.appendChild(removeFromFavorite);
+	container.appendChild(removeFromFavoriteButton);
 }
 
 function searchClickHandler() {
@@ -435,9 +481,9 @@ async function refreshAccessToken(refreshToken) {
 			console.log("new refreshToken is set to " + newTokens.refresh_token);
 		});
 
-	// const newAccessToken = newTokens.access_token;
+	const newAccessToken = newTokens.access_token;
 
-	return newTokens;
+	return newAccessToken;
 }
 
 async function getUsername(accessToken) {

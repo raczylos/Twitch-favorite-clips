@@ -44,6 +44,11 @@ html, body {
     
 }
 
+.copy-to-clipboard-button {
+    background-color: #52528C;
+    
+}
+
 .add-to-favorite-button-container {
     position: relative;
 }

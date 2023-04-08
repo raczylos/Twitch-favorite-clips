@@ -78,7 +78,7 @@ async function refreshAccessToken(refreshToken) {
 				console.error(error);
 			}
 		});
-		hideSpinner();
+
 		return null;
 	}
 	await chrome.storage.local
@@ -91,9 +91,9 @@ async function refreshAccessToken(refreshToken) {
 			console.log("new refreshToken is set to " + newTokens.refresh_token);
 		});
 
-	// const newAccessToken = newTokens.access_token;
+	const newAccessToken = newTokens.access_token;
 
-	return newTokens;
+	return newAccessToken;
 }
 
 function waitForElm(selector) {
@@ -142,12 +142,11 @@ async function addButtonWhenCreatingClip(userId) {
 	publishButton.addEventListener("click", async function () {
 		const inputElement = await waitForElm(".ScInputBase-sc-vu7u7d-0.ScInput-sc-19xfhag-0.gXVFsI.iXedIZ.InjectLayout-sc-1i43xsx-0.gWmDFd.tw-input");
 
-		console.log("inputElement", inputElement);
+		
 		const clipUrl = inputElement.value;
 
 		const clipId = clipUrl.split("/")[3];
-
-		console.log("clipUrl", clipUrl);
+		
 		console.log("clipId", clipId);
 
 		const container = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
@@ -172,9 +171,31 @@ async function addToFavoriteButton(userId, clipId, container, addClipButtonStyle
 	favoriteButton.innerText = "Add to favorite";
 	favoriteButton.classList.add("button", addClipButtonStyle);
 
-	favoriteButton.addEventListener("click", () => {
+	favoriteButton.addEventListener("click", async () => {
 		if (!userId) {
-			alert("Please login in the extension popup to add clip to favorite and then refresh the page.");
+			// "simplebar-scroll-content"
+
+			const warningAlert = document.createElement("div");
+			warningAlert.classList.add("alert", "alert-dismissible", "fade", "show", "alert-warning");
+			warningAlert.setAttribute("role", "alert");
+
+			warningAlert.innerHTML = `
+				<div class="alert alert-danger" role="alert">
+				  	<strong>Warning!</strong> Please login in the extension popup to add clip to favorite and then refresh the page.
+				  	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+				</div>
+			`;
+			
+
+			const bootstrapScript = document.createElement("script");
+			bootstrapScript.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js";
+			document.head.appendChild(bootstrapScript);
+
+			
+			const twitchContainer = await waitForElm(".simplebar-scroll-content");
+			console.log(twitchContainer);
+			twitchContainer.appendChild(warningAlert);
+			// alert("Please login in the extension popup to add clip to favorite and then refresh the page.");
 
 			return;
 		}
@@ -221,57 +242,46 @@ async function getUsername(accessToken) {
 		return null;
 	}
 	const userInfo = await getUserInfo(accessToken);
+	console.log("userInfo", userInfo);
 	if (userInfo.status === 401) {
-		console.log("Status 401");
 		// const refreshToken = localStorage.getItem("refreshToken");
-
 		chrome.storage.local.get(["refreshToken"]).then(async (result) => {
-			console.log("Value currently is " + result.refreshToken);
-			refreshToken = result.refreshToken;
+			let refreshToken = result.refreshToken;
 
-			const newTokens = await refreshAccessToken(refreshToken);
-			console.log("newTokens", newTokens);
-			if (newTokens.status === 401) {
-				// localStorage.removeItem("accessToken")
-				// localStorage.removeItem("refreshToken")
-				chrome.storage.local.remove(["accessToken", "refreshToken"], function () {
-					let error = chrome.runtime.lastError;
-					if (error) {
-						console.error(error);
-					}
-				});
-				return;
+			const newAccessToken = await refreshAccessToken(refreshToken);
+			if (newAccessToken) {
+				init(accessToken);
+				// location.reload()
+				return null;
 			}
-
-			chrome.storage.local
-				.set({
-					accessToken: newTokens.access_token,
-					refreshToken: newTokens.refresh_token,
-				})
-				.then(() => {
-					console.log("accessToken is set to " + newTokens.access_token);
-					console.log("refreshToken is set to " + newTokens.refresh_token);
-				});
-
-			const newAccessToken = newTokens.access_token;
-			return await getUsername(newAccessToken);
 		});
 	}
 
 	const username = userInfo.display_name;
+
 	return username;
+}
+
+// name to change
+function init(accessToken) {
+	getUsername(accessToken).then((username) => {
+		let userId = username;
+		// if (username) {
+		// 	addButton(userId);
+		// }
+		addButton(userId);
+	});
+}
+
+function addButton(userId) {
+	if (window.location.href === "https://clips.twitch.tv/create") {
+		addButtonWhenCreatingClip(userId);
+	} else {
+		addButtonOnCreatedClip(userId);
+	}
 }
 
 chrome.storage.local.get(["accessToken"]).then((result) => {
 	let accessToken = result.accessToken;
-	getUsername(accessToken).then((username) => {
-		let userId = username;
-		if (username) {
-			if (window.location.href === "https://clips.twitch.tv/create") {
-				addButtonWhenCreatingClip(userId);
-			} else {
-				addButtonOnCreatedClip(userId);
-			}
-		}
-	});
+	init(accessToken);
 });
