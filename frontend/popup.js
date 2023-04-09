@@ -151,27 +151,38 @@ async function getUserInfo(accessToken) {
 }
 
 function loadPage(searchQuery) {
-	document.getElementById("clips-container").innerHTML = ""; // clear container
+	getClipCount(userId).then((clipCount) => {
+		totalPages = Math.ceil(clipCount / clipsPerPage);
 
-	displayFavoriteClips(userId, searchQuery);
+		//prevent situation when we delete all clips in last page then we update current page to previous page (totalPage)
+		if (currentPage > totalPages) {
+			currentPage = totalPages;
+		}
 
-	const prevItem = document.getElementById("prev-btn-li");
-	const nextItem = document.getElementById("next-btn-li");
+		displayPagination(totalPages, searchQuery);
 
-	console.log("currentPage", currentPage, "totalPages", totalPages);
-	prevItem.disabled = currentPage === 1;
-	nextItem.disabled = currentPage === totalPages;
-	if (currentPage === 1) {
-		prevItem.classList.add("disabled");
-	} else {
-		prevItem.classList.remove("disabled");
-	}
+		document.getElementById("clips-container").innerHTML = ""; // clear container
 
-	if (currentPage === totalPages) {
-		nextItem.classList.add("disabled");
-	} else {
-		nextItem.classList.remove("disabled");
-	}
+		displayFavoriteClips(userId, searchQuery);
+
+		const prevItem = document.getElementById("prev-btn-li");
+		const nextItem = document.getElementById("next-btn-li");
+
+		console.log("currentPage", currentPage, "totalPages", totalPages);
+		prevItem.disabled = currentPage === 1;
+		nextItem.disabled = currentPage === totalPages;
+		if (currentPage === 1) {
+			prevItem.classList.add("disabled");
+		} else {
+			prevItem.classList.remove("disabled");
+		}
+
+		if (currentPage === totalPages) {
+			nextItem.classList.add("disabled");
+		} else {
+			nextItem.classList.remove("disabled");
+		}
+	});
 }
 
 function createPagination(totalPages, paginationList, searchQuery) {
@@ -222,7 +233,7 @@ function createPagination(totalPages, paginationList, searchQuery) {
 				listItem.classList.add("active");
 				loadPage(searchQuery);
 
-				displayPagination(totalPages, searchQuery);
+				// displayPagination(totalPages, searchQuery);
 			});
 		}
 
@@ -271,7 +282,7 @@ function displayPagination(totalPages, searchQuery) {
 		currentPaginationItem.classList.add("active");
 
 		loadPage(searchQuery);
-		displayPagination(totalPages);
+		// displayPagination(totalPages);
 	});
 
 	nextButton.addEventListener("click", () => {
@@ -284,7 +295,7 @@ function displayPagination(totalPages, searchQuery) {
 		currentPaginationItem.classList.add("active");
 
 		loadPage(searchQuery);
-		displayPagination(totalPages);
+		// displayPagination(totalPages);
 	});
 
 	const paginationListItemPrev = document.createElement("li");
@@ -335,34 +346,63 @@ async function displayFavoriteClips(userId, searchQuery) {
 		return;
 	}
 
+	// favoriteClips.forEach((clip, index) => {
+	// 	const clipContainer = document.createElement("div");
+	// 	clipContainer.classList.add("clip-container");
+
+	// 	const clipLink = document.createElement("a");
+	// 	clipLink.href = clip.clip_url;
+	// 	clipLink.classList.add("clip-img");
+	// 	clipLink.target = "_blank"; //open in new card
+
+	// 	const clipTitle = document.createElement("h4");
+	// 	clipTitle.textContent = clip.clip_title;
+	// 	clipTitle.classList.add("clip-title");
+
+	// 	const clipThumbnail = document.createElement("img");
+	// 	clipThumbnail.src = clip.thumbnail_url;
+
+	// 	clipLink.appendChild(clipThumbnail);
+	// 	clipContainer.appendChild(clipTitle);
+	// 	clipContainer.appendChild(clipLink);
+
+	// 	removeClipInPopup(userId, clip.clip_id, clipContainer);
+	// 	copyToClipboard(clipContainer, clip.clip_url);
+
+	// 	clipsContainer.appendChild(clipContainer);
+	// });
+
 	favoriteClips.forEach((clip, index) => {
 		const clipContainer = document.createElement("div");
-		clipContainer.classList.add("clip-container");
+		clipContainer.classList.add("card", "clip-container");
 
 		const clipLink = document.createElement("a");
 		clipLink.href = clip.clip_url;
-		clipLink.classList.add("clip-img");
-		clipLink.target = "_blank"; //open in new card
-
-		const clipTitle = document.createElement("h4");
-		clipTitle.textContent = clip.clip_title;
-		clipTitle.classList.add("clip-title");
+		clipLink.target = "_blank"; //open in new cards
+		clipLink.classList.add("mb-0", "clip-img");
 
 		const clipThumbnail = document.createElement("img");
 		clipThumbnail.src = clip.thumbnail_url;
+
+		const clipTitle = document.createElement("h4");
+		clipTitle.textContent = clip.clip_title;
+		clipTitle.classList.add("card-title", "clip-title");
 
 		clipLink.appendChild(clipThumbnail);
 		clipContainer.appendChild(clipTitle);
 		clipContainer.appendChild(clipLink);
 
-		removeClipInPopup(userId, clip.clip_id, clipContainer);
-		copyToClipboard(clipContainer, clip.clip_url);
+		const cardBody = document.createElement("div");
+		cardBody.classList.add("card-body");
+
+		removeClipInPopup(userId, clip.clip_id, clipContainer, cardBody);
+		copyToClipboard(clipContainer, clip.clip_url, cardBody);
 
 		clipsContainer.appendChild(clipContainer);
 	});
 }
 
-function copyToClipboard(container, url) {
+function copyToClipboard(clipContainer, url, cardBody) {
 	const copyToClipboardButton = document.createElement("button");
 	const icon = document.createElement("i");
 	icon.classList.add("fa-regular", "fa-copy");
@@ -375,7 +415,8 @@ function copyToClipboard(container, url) {
 
 	copyToClipboardButton.classList.add("button", "copy-to-clipboard-button");
 
-	container.appendChild(copyToClipboardButton);
+	clipContainer.appendChild(cardBody);
+	cardBody.appendChild(copyToClipboardButton);
 	//init tooltip
 	let tooltip = new bootstrap.Tooltip(copyToClipboardButton);
 
@@ -406,7 +447,7 @@ function copyToClipboard(container, url) {
 	});
 }
 
-async function removeClipInPopup(userId, clipId, container) {
+async function removeClipInPopup(userId, clipId, clipContainer, cardBody) {
 	const removeFromFavoriteButton = document.createElement("button");
 
 	removeFromFavoriteButton.innerText = "X";
@@ -418,13 +459,14 @@ async function removeClipInPopup(userId, clipId, container) {
 			.then((response) => {
 				console.log(response);
 				// remove existing button
-				container.remove();
-				location.reload();
+				clipContainer.remove();
+				// location.reload();
+				loadPage();
 			})
 			.catch((error) => console.error(error));
 	});
-
-	container.appendChild(removeFromFavoriteButton);
+	clipContainer.appendChild(cardBody);
+	cardBody.appendChild(removeFromFavoriteButton);
 }
 
 function searchClickHandler() {
@@ -438,7 +480,7 @@ function searchClickHandler() {
 		let totalPages = Math.ceil(clipCount / clipsPerPage);
 		console.log("clipCount", clipCount);
 		console.log("totalPages", totalPages);
-		displayPagination(totalPages, searchQuery.value);
+		// displayPagination(totalPages, searchQuery.value);
 		loadPage(searchQuery.value);
 	});
 }
@@ -450,7 +492,7 @@ function resetClickHandler() {
 		const searchQuery = document.getElementById("search-input");
 		searchQuery.value = "";
 		currentPage = 1;
-		displayPagination(totalPages);
+		// displayPagination(totalPages);
 		loadPage();
 	});
 }
@@ -623,7 +665,7 @@ function initPage(accessToken) {
 
 		getClipCount(userId).then((clipCount) => {
 			totalPages = Math.ceil(clipCount / clipsPerPage);
-			displayPagination(totalPages);
+			// displayPagination(totalPages);
 			loadPage();
 			hideSpinner();
 			document.querySelector(".show-when-logged-out").style.display = "none";

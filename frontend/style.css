@@ -12,19 +12,49 @@ html, body {
     
 }
 
-.bg-dark-search {
+.navbar-bg {
     background-color: #161616;
 }
 
-.pagination .page-item .page-link {
+#clips-container > .card {
+    background-color: #121212;
+}
+
+.pagination > li > button
+{
+    color: #52528C;
     background-color: #161616 ;
     border-color: #272727 ;
 }
 
-.pagination .page-item.disabled .page-link {
+.pagination > li > button:hover
+{   
+    color: #52528C;
+    background-color: #161616 ;
+    border-color: #272727 ;
+    opacity: 0.9;
+}
+
+.pagination > .active > button
+{   
+    
+    background-color: #52528C;
+    border: solid 1px #52528C;
+}
+
+.pagination > .active > button:hover
+{
+    color: #fff;
+    background-color: #52528C;
+    border: solid 1px #52528C;
+}
+
+.pagination > .disabled > button
+{
     background-color: #161616 ;
     border-color: #272727 ;
 }
+
 
 .button {
     margin-left: 10px;
@@ -117,15 +147,15 @@ html, body {
   }
   
 .clip-container {
-    padding-left: 6px;
-    
-    flex-basis: calc(50% - 10px);
-    margin: 5px;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    align-items: center;
     justify-content: space-between;
+    padding: 6px;
+    margin: 5px;
+    flex-basis: calc(50% - 10px);
 }
-  
+
 .clip-container:first-child {
     flex-basis: 100%;
     display: flex;
@@ -138,6 +168,7 @@ html, body {
     max-width: 100%;
     align-self: center;
 }
+
 
 #search-input {
     width: 200px;
@@ -167,6 +198,10 @@ html, body {
     padding: 2px;
 }
 
+#favorite-clips {
+    padding-left: 16px;
+    padding-top: 10px;
+}
 
 .clip-container:first-child .clip-title {
     max-width: 400px;
@@ -184,3 +219,13 @@ html, body {
     left: 50%;
     transform: translate(-50%, -50%);
 }
+
+#search-button {
+    border-color: #52528C;
+    color: #52528C;
+}
+
+#search-button:hover {
+    background-color: #52528C;
+    color: #ffffff;
+  }
