@@ -61,9 +61,10 @@ async function getNewRefreshedTokens(refreshToken) {
 }
 
 function getClipId() {
-	// const clipUrl = window.location.href
 	let clipUrl = window.location.href;
-	let clipId = clipUrl.match(/[^/]*$/)[0];
+	let regex = /([A-Za-z0-9]+(-[A-Za-z0-9]+)+)/i;
+	let clipId = clipUrl.match(regex)[0];
+	// let clipId = clipUrl.match(/[^/]*$/)[0];
 
 	return clipId;
 }
@@ -118,10 +119,12 @@ function waitForElm(selector) {
 
 async function addButtonOnCreatedClip(userId) {
 	const clipId = getClipId();
+	console.log("clipId is", clipId);
 	// if (!clipId) return;
 
 	//check if clip is already in fav list
 	const isClipInFavorites = await isUserClipInFavorites(userId, clipId);
+	console.log("isClipInFavorites", isClipInFavorites);
 
 	const container = await waitForElm(".Layout-sc-1xcs6mc-0.jJplWu");
 
@@ -142,11 +145,10 @@ async function addButtonWhenCreatingClip(userId) {
 	publishButton.addEventListener("click", async function () {
 		const inputElement = await waitForElm(".ScInputBase-sc-vu7u7d-0.ScInput-sc-19xfhag-0.gXVFsI.iXedIZ.InjectLayout-sc-1i43xsx-0.gWmDFd.tw-input");
 
-		
 		const clipUrl = inputElement.value;
 
 		const clipId = clipUrl.split("/")[3];
-		
+
 		console.log("clipId", clipId);
 
 		const container = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
@@ -185,13 +187,11 @@ async function addToFavoriteButton(userId, clipId, container, addClipButtonStyle
 				  	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 				</div>
 			`;
-			
 
 			const bootstrapScript = document.createElement("script");
 			bootstrapScript.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js";
 			document.head.appendChild(bootstrapScript);
 
-			
 			const twitchContainer = await waitForElm(".simplebar-scroll-content");
 			console.log(twitchContainer);
 			twitchContainer.appendChild(warningAlert);
@@ -284,4 +284,34 @@ function addButton(userId) {
 chrome.storage.local.get(["accessToken"]).then((result) => {
 	let accessToken = result.accessToken;
 	init(accessToken);
+
+	test(accessToken);
 });
+
+async function test(accessToken) {
+	// popular clips recommended by twitch
+	const popularClipsDiv = await waitForElm(".Layout-sc-1xcs6mc-0.hJwsAI");
+
+	popularClipsDiv.addEventListener("click", function (event) {
+		if (event.target.closest("a")) {
+
+			const addToFavoriteButton = document.querySelector(".add-to-favorite-button-in-created-clip");
+			const removeFromFavoriteButton = document.querySelector(".remove-from-favorite-button-in-created-clip");
+	
+			// remove existing buttons
+			if (addToFavoriteButton) {
+				addToFavoriteButton.remove();
+			}
+			if (removeFromFavoriteButton) {
+				removeFromFavoriteButton.remove();
+			}
+
+			
+
+			init(accessToken);
+			console.log("An <a> element or its descendant was clicked!");
+		}
+	});
+}
+
+

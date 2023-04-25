@@ -235,6 +235,7 @@ def search_favorite_clip_count(user_id):
 
 @app.route('/favorite_clips/search', methods=['GET'])
 def search_clips():
+    
     query = request.args.get('query')
     user_id = request.args.get('user_id')
     page = request.args.get('page', default=1, type=int)

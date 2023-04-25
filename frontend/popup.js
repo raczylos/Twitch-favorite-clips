@@ -150,39 +150,80 @@ async function getUserInfo(accessToken) {
 	return userInfo;
 }
 
-function loadPage(searchQuery) {
-	getClipCount(userId).then((clipCount) => {
-		totalPages = Math.ceil(clipCount / clipsPerPage);
+async function loadPage(searchQuery) {
 
-		//prevent situation when we delete all clips in last page then we update current page to previous page (totalPage)
-		if (currentPage > totalPages) {
-			currentPage = totalPages;
-		}
+	let clipCount
+	if(searchQuery){
+		clipCount = await searchFavoriteClipCount(userId, searchQuery)
+	} else {
+		clipCount = await getClipCount(userId)
+	}
 
-		displayPagination(totalPages, searchQuery);
+	totalPages = Math.ceil(clipCount / clipsPerPage);
 
-		document.getElementById("clips-container").innerHTML = ""; // clear container
+	//prevent situation when we delete all clips in last page then we update current page to previous page (totalPage)
+	if (currentPage > totalPages) {
+		currentPage = totalPages;
+	}
 
-		displayFavoriteClips(userId, searchQuery);
+	displayPagination(totalPages, searchQuery);
 
-		const prevItem = document.getElementById("prev-btn-li");
-		const nextItem = document.getElementById("next-btn-li");
+	document.getElementById("clips-container").innerHTML = ""; // clear container
 
-		console.log("currentPage", currentPage, "totalPages", totalPages);
-		prevItem.disabled = currentPage === 1;
-		nextItem.disabled = currentPage === totalPages;
-		if (currentPage === 1) {
-			prevItem.classList.add("disabled");
-		} else {
-			prevItem.classList.remove("disabled");
-		}
+	displayFavoriteClips(userId, searchQuery);
 
-		if (currentPage === totalPages) {
-			nextItem.classList.add("disabled");
-		} else {
-			nextItem.classList.remove("disabled");
-		}
-	});
+	const prevItem = document.getElementById("prev-btn-li");
+	const nextItem = document.getElementById("next-btn-li");
+
+	console.log("currentPage", currentPage, "totalPages", totalPages);
+	prevItem.disabled = currentPage === 1;
+	nextItem.disabled = currentPage === totalPages;
+
+	if (currentPage === 1) {
+		prevItem.classList.add("disabled");
+	} else {
+		prevItem.classList.remove("disabled");
+	}
+
+	if (currentPage === totalPages) {
+		nextItem.classList.add("disabled");
+	} else {
+		nextItem.classList.remove("disabled");
+	}
+
+	// getClipCount(userId).then((clipCount) => {
+	// 	totalPages = Math.ceil(clipCount / clipsPerPage);
+
+	// 	//prevent situation when we delete all clips in last page then we update current page to previous page (totalPage)
+	// 	if (currentPage > totalPages) {
+	// 		currentPage = totalPages;
+	// 	}
+
+	// 	displayPagination(totalPages, searchQuery);
+
+	// 	document.getElementById("clips-container").innerHTML = ""; // clear container
+
+	// 	displayFavoriteClips(userId, searchQuery);
+
+	// 	const prevItem = document.getElementById("prev-btn-li");
+	// 	const nextItem = document.getElementById("next-btn-li");
+
+	// 	console.log("currentPage", currentPage, "totalPages", totalPages);
+	// 	prevItem.disabled = currentPage === 1;
+	// 	nextItem.disabled = currentPage === totalPages;
+
+	// 	if (currentPage === 1) {
+	// 		prevItem.classList.add("disabled");
+	// 	} else {
+	// 		prevItem.classList.remove("disabled");
+	// 	}
+
+	// 	if (currentPage === totalPages) {
+	// 		nextItem.classList.add("disabled");
+	// 	} else {
+	// 		nextItem.classList.remove("disabled");
+	// 	}
+	// });
 }
 
 function createPagination(totalPages, paginationList, searchQuery) {
@@ -325,6 +366,17 @@ function displayPagination(totalPages, searchQuery) {
 
 async function displayFavoriteClips(userId, searchQuery) {
 	let favoriteClips;
+	const clipsContainer = document.getElementById("clips-container");
+	
+	if (currentPage === 0) {
+		const noClipsMsg = document.createElement("h2");
+		noClipsMsg.textContent = "No clips found :(";
+
+		noClipsMsg.style.margin = "auto";
+
+		clipsContainer.appendChild(noClipsMsg);
+		return;
+	}
 
 	if (searchQuery) {
 		console.log("searchFavoriteClips", currentPage, clipsPerPage);
@@ -334,17 +386,17 @@ async function displayFavoriteClips(userId, searchQuery) {
 	}
 	console.log("favoriteClips", favoriteClips);
 
-	const clipsContainer = document.getElementById("clips-container");
+	
 
-	if (!favoriteClips || favoriteClips.length === 0) {
-		const noClipsMsg = document.createElement("h2");
-		noClipsMsg.textContent = "No clips found :(";
+	// if (!favoriteClips || favoriteClips.length === 0) {
+	// 	const noClipsMsg = document.createElement("h2");
+	// 	noClipsMsg.textContent = "No clips found :(";
 
-		noClipsMsg.style.margin = "auto";
+	// 	noClipsMsg.style.margin = "auto";
 
-		clipsContainer.appendChild(noClipsMsg);
-		return;
-	}
+	// 	clipsContainer.appendChild(noClipsMsg);
+	// 	return;
+	// }
 
 	// favoriteClips.forEach((clip, index) => {
 	// 	const clipContainer = document.createElement("div");
@@ -476,10 +528,13 @@ function searchClickHandler() {
 		currentPage = 1;
 
 		const searchQuery = document.getElementById("search-input");
-		let clipCount = await searchFavoriteClipCount(userId, searchQuery.value);
-		let totalPages = Math.ceil(clipCount / clipsPerPage);
-		console.log("clipCount", clipCount);
-		console.log("totalPages", totalPages);
+
+		// let clipCount = await searchFavoriteClipCount(userId, searchQuery.value);
+
+		// // let totalPages = Math.ceil(clipCount / clipsPerPage);
+		// totalPages = Math.ceil(clipCount / clipsPerPage);
+		// console.log("clipCount", clipCount);
+		// console.log("totalPages", totalPages);
 		// displayPagination(totalPages, searchQuery.value);
 		loadPage(searchQuery.value);
 	});
@@ -663,14 +718,11 @@ function initPage(accessToken) {
 		searchClickHandler();
 		resetClickHandler();
 
-		getClipCount(userId).then((clipCount) => {
-			totalPages = Math.ceil(clipCount / clipsPerPage);
-			// displayPagination(totalPages);
-			loadPage();
-			hideSpinner();
-			document.querySelector(".show-when-logged-out").style.display = "none";
-			document.querySelector(".show-when-logged-in").style.display = "block";
-		});
+
+		loadPage();
+		hideSpinner();
+		document.querySelector(".show-when-logged-out").style.display = "none";
+		document.querySelector(".show-when-logged-in").style.display = "block";
 	});
 }
 

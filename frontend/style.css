@@ -32,7 +32,7 @@ html, body {
     color: #52528C;
     background-color: #161616 ;
     border-color: #272727 ;
-    opacity: 0.9;
+    opacity: 0.7;
 }
 
 .pagination > .active > button
@@ -57,8 +57,8 @@ html, body {
 
 
 .button {
-    margin-left: 10px;
-    margin-right: 10px;
+    margin-left: 5px;
+    margin-right: 5px;
     color: #fff;
     border: none;
     border-radius: 0.4rem;
@@ -75,7 +75,13 @@ html, body {
 }
 
 .copy-to-clipboard-button {
+    margin: 5px;
     background-color: #52528C;
+    
+}
+
+.copy-to-clipboard-button:hover {
+    background-color: #383866;
     
 }
 
@@ -85,7 +91,11 @@ html, body {
 
 .add-to-favorite-button-in-created-clip {
     background-color: #9147ff;
+    /* margin: 5px; */
+    margin-right: 0px;
+   
     width: fit-content;
+    /* display: block; */
 }
 
 .add-to-favorite-button-when-creating-clip {
@@ -99,8 +109,12 @@ html, body {
 
 .remove-from-favorite-button-in-created-clip {
     background-color: #cf2f06;
+    margin-right: 0px;
+    margin-left: 6px;
+    /* margin-left: 0px;
+    margin-top: 10px; */
+    /* display: block; */
     width: fit-content;
-    
 }
 
 .remove-from-favorite-button-when-creating-clip {
@@ -115,6 +129,10 @@ html, body {
 .remove-from-favorite-button-in-popup {
     background-color: #cf2f06;
     margin: 5px;
+}
+
+.remove-from-favorite-button-in-popup:hover {
+    background-color: #aa2909; 
 }
 
 .add-to-favorite-button:hover {
