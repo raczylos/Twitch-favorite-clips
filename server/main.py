@@ -304,8 +304,8 @@ with app.app_context():
 
 
 
-if __name__ == '__main__':
-    app.run(host='localhost', debug=True)
+# if __name__ == '__main__':
+#     app.run(host='twitch-favorite-clips-api.onrender.com', debug=True)
     
 
 # flask --app bot  run --cert=cert.pem --key=key.pem
