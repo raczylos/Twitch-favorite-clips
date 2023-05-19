@@ -596,7 +596,6 @@ function loginViaTwitch() {
 	const loginButton = document.getElementById("login-button");
 
 	loginButton.addEventListener("click", async () => {
-		console.log("loginButton.addEventListener");
 		const clientId = await getClientId();
 		const redirectUri = "http://localhost:5000/authorize";
 

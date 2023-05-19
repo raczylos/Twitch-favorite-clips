@@ -6,9 +6,9 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
-from __init__ import create_app
+# from __init__ import create_app
 
-from run import db, app
+# from run import db, app
 
 # app = Flask(__name__)
 # CORS(app)
@@ -30,6 +30,16 @@ from run import db, app
 
 # db = SQLAlchemy(app)
 
+app = Flask(__name__)
+CORS(app)
+load_dotenv()
+db_url = os.getenv('DATABASE_URL')
+app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+
+db = SQLAlchemy(app)
+
+with app.app_context():
+    db.create_all()
 
 
 
