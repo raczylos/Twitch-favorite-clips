@@ -1,5 +1,6 @@
 import os
 import requests
+
 from twitchio.ext import commands
 
 from flask import Flask, request, jsonify
@@ -7,22 +8,31 @@ from flask_cors import CORS
 from flask_sqlalchemy import SQLAlchemy
 from dotenv import load_dotenv
 
+from __init__ import create_app
 
-app = Flask(__name__)
-CORS(app)
+from run import db, app
 
-# load .env variables
-load_dotenv()
+# app = Flask(__name__)
+# CORS(app)
 
-# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///favorites.db'
+# # load .env variables
+# load_dotenv()
 
-db_username = os.getenv('USERNAME')
-db_password = os.getenv('PASSWORD')
-app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_username}:{db_password}@localhost/favorite_clips'
+# # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///favorites.db'
 
-# app.config['SECRET_KEY'] = "test123"
+# db_username = os.getenv('USERNAME')
+# db_password = os.getenv('PASSWORD')
+# db_url = os.getenv('DATABASE_URL')
 
-db = SQLAlchemy(app)
+
+# # app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_username}:{db_password}@localhost/favorite_clips' 
+# app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+
+
+
+# db = SQLAlchemy(app)
+
+
 
 
 class Clips(db.Model):
@@ -135,7 +145,7 @@ def add_clip_to_favorites():
     existing_clip = Clips.query.filter_by(clip_id=clip_id, user_id=user_id).first()
     if existing_clip:
         return jsonify({'error': 'Clip already in favorites.'}), 400
-
+    print(get_clip_info(clip_id))
     clip_info = get_clip_info(clip_id)['data'][0]
     creator_name = clip_info['creator_name']
     broadcaster_name = clip_info['broadcaster_name']
@@ -154,7 +164,6 @@ def add_clip_to_favorites():
     db.session.commit()
     return jsonify({'success': True})
 
-    return clip_info
 
 @app.route('/remove_clip_from_favorites', methods=['DELETE'])
 def remove_clip_from_favorites():

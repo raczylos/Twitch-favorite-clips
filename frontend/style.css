@@ -27,6 +27,8 @@ html, body {
     border-color: #272727 ;
 }
 
+.pagination > li > button:focus,
+.pagination > li > button:active,
 .pagination > li > button:hover
 {   
     color: #52528C;
@@ -42,6 +44,8 @@ html, body {
     border: solid 1px #52528C;
 }
 
+.pagination > .active > button:focus,
+.pagination > .active > button:active,
 .pagination > .active > button:hover
 {
     color: #fff;
@@ -101,7 +105,7 @@ html, body {
 .add-to-favorite-button-when-creating-clip {
     background-color: #9147ff;
     width: fit-content;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     position: absolute;
     bottom: 0;
     right: 0;
@@ -120,7 +124,7 @@ html, body {
 .remove-from-favorite-button-when-creating-clip {
     background-color: #cf2f06;
     width: fit-content;
-    margin-bottom: 10px;
+    margin-bottom: 5px;
     position: absolute;
     bottom: 0;
     right: 0;
@@ -221,6 +225,10 @@ html, body {
     padding-top: 10px;
 }
 
+#clips-container  .card-body {
+    padding: 5px;
+}
+
 .clip-container:first-child .clip-title {
     max-width: 400px;
 }
@@ -247,3 +255,41 @@ html, body {
     background-color: #52528C;
     color: #ffffff;
   }
+
+.purple-button.btn {
+    border-color: #52528C;
+    color: #52528C;
+}
+
+.purple-button.btn:hover {
+    background-color: #52528C;
+    color: #ffffff;
+}
+
+/* #logout-button:hover {
+    background-color: #161616;
+}
+
+.dropdown-item:hover {
+    background-color: #161616;
+} */
+
+.dropdown .dropdown-menu {
+    min-width: 60px; 
+}
+
+.navbar .dropdown button {
+    color: #52528C;
+}
+
+
+.navbar .dropdown button:active,
+.navbar .dropdown button:hover {
+    color: #383866;
+}
+
+.dropdown i.bi-person-fill {
+    font-size: 1.3em;
+}
+
+

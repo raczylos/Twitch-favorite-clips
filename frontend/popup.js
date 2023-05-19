@@ -1,8 +1,3 @@
-// Layout-sc-1xcs6mc-0 hTjGax
-// Layout-sc-1xcs6mc-0 faJCen
-
-
-
 function waitForElm(selector) {
 	return new Promise((resolve) => {
 		if (document.querySelector(selector)) {
@@ -151,12 +146,11 @@ async function getUserInfo(accessToken) {
 }
 
 async function loadPage(searchQuery) {
-
-	let clipCount
-	if(searchQuery){
-		clipCount = await searchFavoriteClipCount(userId, searchQuery)
+	let clipCount;
+	if (searchQuery) {
+		clipCount = await searchFavoriteClipCount(userId, searchQuery);
 	} else {
-		clipCount = await getClipCount(userId)
+		clipCount = await getClipCount(userId);
 	}
 
 	totalPages = Math.ceil(clipCount / clipsPerPage);
@@ -190,40 +184,6 @@ async function loadPage(searchQuery) {
 	} else {
 		nextItem.classList.remove("disabled");
 	}
-
-	// getClipCount(userId).then((clipCount) => {
-	// 	totalPages = Math.ceil(clipCount / clipsPerPage);
-
-	// 	//prevent situation when we delete all clips in last page then we update current page to previous page (totalPage)
-	// 	if (currentPage > totalPages) {
-	// 		currentPage = totalPages;
-	// 	}
-
-	// 	displayPagination(totalPages, searchQuery);
-
-	// 	document.getElementById("clips-container").innerHTML = ""; // clear container
-
-	// 	displayFavoriteClips(userId, searchQuery);
-
-	// 	const prevItem = document.getElementById("prev-btn-li");
-	// 	const nextItem = document.getElementById("next-btn-li");
-
-	// 	console.log("currentPage", currentPage, "totalPages", totalPages);
-	// 	prevItem.disabled = currentPage === 1;
-	// 	nextItem.disabled = currentPage === totalPages;
-
-	// 	if (currentPage === 1) {
-	// 		prevItem.classList.add("disabled");
-	// 	} else {
-	// 		prevItem.classList.remove("disabled");
-	// 	}
-
-	// 	if (currentPage === totalPages) {
-	// 		nextItem.classList.add("disabled");
-	// 	} else {
-	// 		nextItem.classList.remove("disabled");
-	// 	}
-	// });
 }
 
 function createPagination(totalPages, paginationList, searchQuery) {
@@ -367,7 +327,7 @@ function displayPagination(totalPages, searchQuery) {
 async function displayFavoriteClips(userId, searchQuery) {
 	let favoriteClips;
 	const clipsContainer = document.getElementById("clips-container");
-	
+
 	if (currentPage === 0) {
 		const noClipsMsg = document.createElement("h2");
 		noClipsMsg.textContent = "No clips found :(";
@@ -385,44 +345,6 @@ async function displayFavoriteClips(userId, searchQuery) {
 		favoriteClips = await getFavoriteClips(userId, currentPage, clipsPerPage);
 	}
 	console.log("favoriteClips", favoriteClips);
-
-	
-
-	// if (!favoriteClips || favoriteClips.length === 0) {
-	// 	const noClipsMsg = document.createElement("h2");
-	// 	noClipsMsg.textContent = "No clips found :(";
-
-	// 	noClipsMsg.style.margin = "auto";
-
-	// 	clipsContainer.appendChild(noClipsMsg);
-	// 	return;
-	// }
-
-	// favoriteClips.forEach((clip, index) => {
-	// 	const clipContainer = document.createElement("div");
-	// 	clipContainer.classList.add("clip-container");
-
-	// 	const clipLink = document.createElement("a");
-	// 	clipLink.href = clip.clip_url;
-	// 	clipLink.classList.add("clip-img");
-	// 	clipLink.target = "_blank"; //open in new card
-
-	// 	const clipTitle = document.createElement("h4");
-	// 	clipTitle.textContent = clip.clip_title;
-	// 	clipTitle.classList.add("clip-title");
-
-	// 	const clipThumbnail = document.createElement("img");
-	// 	clipThumbnail.src = clip.thumbnail_url;
-
-	// 	clipLink.appendChild(clipThumbnail);
-	// 	clipContainer.appendChild(clipTitle);
-	// 	clipContainer.appendChild(clipLink);
-
-	// 	removeClipInPopup(userId, clip.clip_id, clipContainer);
-	// 	copyToClipboard(clipContainer, clip.clip_url);
-
-	// 	clipsContainer.appendChild(clipContainer);
-	// });
 
 	favoriteClips.forEach((clip, index) => {
 		const clipContainer = document.createElement("div");
@@ -523,19 +445,14 @@ async function removeClipInPopup(userId, clipId, clipContainer, cardBody) {
 
 function searchClickHandler() {
 	const searchButton = document.getElementById("search-button");
+
 	searchButton.addEventListener("click", async () => {
+		console.log("searchButton.addEventListener");
 		event.preventDefault();
 		currentPage = 1;
 
 		const searchQuery = document.getElementById("search-input");
 
-		// let clipCount = await searchFavoriteClipCount(userId, searchQuery.value);
-
-		// // let totalPages = Math.ceil(clipCount / clipsPerPage);
-		// totalPages = Math.ceil(clipCount / clipsPerPage);
-		// console.log("clipCount", clipCount);
-		// console.log("totalPages", totalPages);
-		// displayPagination(totalPages, searchQuery.value);
 		loadPage(searchQuery.value);
 	});
 }
@@ -628,6 +545,22 @@ async function login(code) {
 	}
 }
 
+function logout() {
+	chrome.storage.local.remove(["accessToken", "refreshToken"], () => {
+		console.log("Access token and refresh token removed.");
+	});
+}
+
+function logoutButtonHandler() {
+	const logoutButton = document.querySelector("#logout-button");
+
+	logoutButton.addEventListener("click", () => {
+		console.log("logout");
+		logout();
+		initPage();
+	});
+}
+
 function hideSpinner() {
 	const spinnerWrapper = document.getElementById("spinner-wrapper");
 	const spinner = spinnerWrapper.querySelector(".spinner-border");
@@ -658,9 +591,9 @@ function showSpinner() {
 
 function loginViaTwitch() {
 	const loginButton = document.getElementById("login-button");
-	loginButton.classList.add("btn");
-	loginButton.classList.add("btn-primary");
+
 	loginButton.addEventListener("click", async () => {
+		console.log("loginButton.addEventListener");
 		const clientId = await getClientId();
 		const redirectUri = "http://localhost:5000/authorize";
 
@@ -691,7 +624,7 @@ function loginViaTwitch() {
 }
 
 let currentPage = 1;
-const clipsPerPage = 3;
+const clipsPerPage = 8;
 
 let totalPages;
 
@@ -699,7 +632,7 @@ let userId;
 
 function initPage(accessToken) {
 	showSpinner();
-	loginViaTwitch();
+	// loginViaTwitch();
 	document.querySelector(".show-when-logged-out").style.display = "none";
 	document.querySelector(".show-when-logged-in").style.display = "none";
 
@@ -715,9 +648,9 @@ function initPage(accessToken) {
 
 		userId = username;
 
-		searchClickHandler();
-		resetClickHandler();
-
+		// searchClickHandler();
+		// resetClickHandler();
+		// logoutButtonHandler();
 
 		loadPage();
 		hideSpinner();
@@ -728,9 +661,12 @@ function initPage(accessToken) {
 
 let accessToken;
 
+loginViaTwitch();
+searchClickHandler();
+resetClickHandler();
+logoutButtonHandler();
+
 chrome.storage.local.get(["accessToken"]).then((result) => {
 	accessToken = result.accessToken;
 	initPage(accessToken);
 });
-
-

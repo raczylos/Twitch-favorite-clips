@@ -62,16 +62,17 @@ async function getNewRefreshedTokens(refreshToken) {
 
 function getClipId() {
 	let clipUrl = window.location.href;
-	let regex = /([A-Za-z0-9]+(-[A-Za-z0-9]+)+)/i;
-	let clipId = clipUrl.match(regex)[0];
-	// let clipId = clipUrl.match(/[^/]*$/)[0];
+	// let regex = /([A-Za-z0-9]+(-[A-Za-z0-9]+)+)/i;
+	// const regex = /\/([\w-]+)(?:$|\?)/;
+	const regex = /\/([A-Za-z0-9_-]+)(?:$|\?)/;
+	let clipId = clipUrl.match(regex)[1];
 
 	return clipId;
 }
 
 async function refreshAccessToken(refreshToken) {
 	const newTokens = await getNewRefreshedTokens(refreshToken);
-
+	console.log("refreshAccessToken", newTokens)
 	if (newTokens.status === 401) {
 		chrome.storage.local.remove(["accessToken", "refreshToken"], function () {
 			let error = chrome.runtime.lastError;
@@ -139,18 +140,21 @@ async function addButtonOnCreatedClip(userId) {
 }
 
 async function addButtonWhenCreatingClip(userId) {
-	//check if clip is already in fav list
 	const publishButton = await waitForElm("button.ScCoreButtonPrimary-sc-ocjdkq-1");
 
 	publishButton.addEventListener("click", async function () {
-		const inputElement = await waitForElm(".ScInputBase-sc-vu7u7d-0.ScInput-sc-19xfhag-0.gXVFsI.iXedIZ.InjectLayout-sc-1i43xsx-0.gWmDFd.tw-input");
-
+		console.log("xdd");
+		// const inputElement = await waitForElm(".ScInputBase-sc-vu7u7d-0.ScInput-sc-19xfhag-0.gXVFsI.iXedIZ.InjectLayout-sc-1i43xsx-0.gWmDFd.tw-input");
+		// const inputElement = await waitForElm(".ScInputBase-sc-vu7u7d-0.ScInput-sc-19xfhag-0");
+		const inputElement = await waitForElm('[data-a-target="tw-input"][readonly]');
+		//readonly
+		console.log("inputElement", inputElement);
 		const clipUrl = inputElement.value;
 
 		const clipId = clipUrl.split("/")[3];
 
 		console.log("clipId", clipId);
-
+		
 		const container = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
 		container.classList.add("add-to-favorite-button-container");
 		// const container = await waitForElm(".Layout-sc-1xcs6mc-0.dphleo.clips-sidebar-info");
@@ -264,6 +268,7 @@ async function getUsername(accessToken) {
 
 // name to change
 function init(accessToken) {
+	console.log("init")
 	getUsername(accessToken).then((username) => {
 		let userId = username;
 		// if (username) {
@@ -275,29 +280,23 @@ function init(accessToken) {
 
 function addButton(userId) {
 	if (window.location.href === "https://clips.twitch.tv/create") {
+		console.log("https://clips.twitch.tv/create");
 		addButtonWhenCreatingClip(userId);
 	} else {
 		addButtonOnCreatedClip(userId);
 	}
 }
 
-chrome.storage.local.get(["accessToken"]).then((result) => {
-	let accessToken = result.accessToken;
-	init(accessToken);
-
-	test(accessToken);
-});
-
-async function test(accessToken) {
+async function recommendationClickHandler(accessToken) {
+	console.log("recommendationClickHandler")
 	// popular clips recommended by twitch
 	const popularClipsDiv = await waitForElm(".Layout-sc-1xcs6mc-0.hJwsAI");
 
 	popularClipsDiv.addEventListener("click", function (event) {
 		if (event.target.closest("a")) {
-
 			const addToFavoriteButton = document.querySelector(".add-to-favorite-button-in-created-clip");
 			const removeFromFavoriteButton = document.querySelector(".remove-from-favorite-button-in-created-clip");
-	
+
 			// remove existing buttons
 			if (addToFavoriteButton) {
 				addToFavoriteButton.remove();
@@ -306,12 +305,19 @@ async function test(accessToken) {
 				removeFromFavoriteButton.remove();
 			}
 
-			
-
 			init(accessToken);
-			console.log("An <a> element or its descendant was clicked!");
 		}
 	});
 }
+
+chrome.storage.local.get(["accessToken"]).then((result) => {
+	console.log("first")
+	let accessToken = result.accessToken;
+	init(accessToken);
+
+});
+
+recommendationClickHandler(accessToken);
+
 
 
