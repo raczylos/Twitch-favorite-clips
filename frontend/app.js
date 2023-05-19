@@ -1,5 +1,9 @@
+
+const base_url = "https://twitch-favorite-clips-api.onrender.com/"
+// const base_url = "http://127.0.0.1:5000/"
+
 async function addClip(userId, clipId) {
-	const url = `http://127.0.0.1:5000/add_clip_to_favorites?user_id=${userId}&clip_id=${clipId}`;
+	const url = `${base_url}add_clip_to_favorites?user_id=${userId}&clip_id=${clipId}`;
 
 	const response = await fetch(url, {
 		method: "POST",
@@ -11,7 +15,7 @@ async function addClip(userId, clipId) {
 }
 
 async function getUserInfo(accessToken) {
-	const url = `http://127.0.0.1:5000/get_user_info?access_token=${accessToken}`;
+	const url = `${base_url}get_user_info?access_token=${accessToken}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -24,7 +28,7 @@ async function getUserInfo(accessToken) {
 }
 
 async function removeClip(userId, clipId) {
-	const url = `http://127.0.0.1:5000/remove_clip_from_favorites?user_id=${userId}&clip_id=${clipId}`;
+	const url = `${base_url}remove_clip_from_favorites?user_id=${userId}&clip_id=${clipId}`;
 	const response = await fetch(url, {
 		method: "DELETE",
 		headers: {
@@ -35,7 +39,7 @@ async function removeClip(userId, clipId) {
 }
 
 async function isUserClipInFavorites(userId, clipId) {
-	const url = `http://127.0.0.1:5000/is_user_clip_in_favorites?user_id=${userId}&clip_id=${clipId}`;
+	const url = `${base_url}is_user_clip_in_favorites?user_id=${userId}&clip_id=${clipId}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -48,7 +52,7 @@ async function isUserClipInFavorites(userId, clipId) {
 }
 
 async function getNewRefreshedTokens(refreshToken) {
-	const url = `http://127.0.0.1:5000/refresh_access_token?refresh_token=${refreshToken}`;
+	const url = `${base_url}refresh_access_token?refresh_token=${refreshToken}`;
 
 	const response = await fetch(url, {
 		method: "GET",

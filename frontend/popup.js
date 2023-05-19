@@ -1,3 +1,6 @@
+const base_url = "https://twitch-favorite-clips-api.onrender.com/"
+// const base_url = "http://127.0.0.1:5000/"
+
 function waitForElm(selector) {
 	return new Promise((resolve) => {
 		if (document.querySelector(selector)) {
@@ -19,7 +22,7 @@ function waitForElm(selector) {
 }
 
 async function sendClipToServer(userId, clipId) {
-	const url = `http://127.0.0.1:5000/add_clip_to_favorites?user_id=${userId}&clip_id=${clipId}`;
+	const url = `${base_url}add_clip_to_favorites?user_id=${userId}&clip_id=${clipId}`;
 
 	const response = await fetch(url, {
 		method: "POST",
@@ -31,7 +34,7 @@ async function sendClipToServer(userId, clipId) {
 }
 
 async function removeClip(userId, clipId) {
-	const url = `http://127.0.0.1:5000/remove_clip_from_favorites?user_id=${userId}&clip_id=${clipId}`;
+	const url = `${base_url}remove_clip_from_favorites?user_id=${userId}&clip_id=${clipId}`;
 	const response = await fetch(url, {
 		method: "DELETE",
 		headers: {
@@ -42,7 +45,7 @@ async function removeClip(userId, clipId) {
 }
 
 async function getFavoriteClips(userId, page, clipsPerPage) {
-	const url = `http://127.0.0.1:5000/favorite_clips/${userId}?page=${page}&clips_per_page=${clipsPerPage}`;
+	const url = `${base_url}favorite_clips/${userId}?page=${page}&clips_per_page=${clipsPerPage}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -55,7 +58,7 @@ async function getFavoriteClips(userId, page, clipsPerPage) {
 }
 
 async function getClipCount(userId) {
-	const url = `http://127.0.0.1:5000/favorite_clips/count/${userId}`;
+	const url = `${base_url}favorite_clips/count/${userId}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -68,7 +71,7 @@ async function getClipCount(userId) {
 }
 
 async function getClientId() {
-	const url = `http://127.0.0.1:5000/client_id`;
+	const url = `${base_url}client_id`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -81,7 +84,7 @@ async function getClientId() {
 }
 
 async function searchFavoriteClips(userId, query, page, clipsPerPage) {
-	const url = `http://127.0.0.1:5000/favorite_clips/search?query=${query}&page=${page}&clips_per_page=${clipsPerPage}&user_id=${userId}`;
+	const url = `${base_url}favorite_clips/search?query=${query}&page=${page}&clips_per_page=${clipsPerPage}&user_id=${userId}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -94,7 +97,7 @@ async function searchFavoriteClips(userId, query, page, clipsPerPage) {
 }
 
 async function searchFavoriteClipCount(userId, query) {
-	const url = `http://127.0.0.1:5000/favorite_clips/search/count/${userId}?query=${query}`;
+	const url = `${base_url}favorite_clips/search/count/${userId}?query=${query}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -107,7 +110,7 @@ async function searchFavoriteClipCount(userId, query) {
 }
 
 async function getUserTokens(code) {
-	const url = `http://127.0.0.1:5000/get_user_tokens?code=${code}`;
+	const url = `${base_url}get_user_tokens?code=${code}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -120,7 +123,7 @@ async function getUserTokens(code) {
 }
 
 async function getNewRefreshedTokens(refreshToken) {
-	const url = `http://127.0.0.1:5000/refresh_access_token?refresh_token=${refreshToken}`;
+	const url = `${base_url}refresh_access_token?refresh_token=${refreshToken}`;
 
 	const response = await fetch(url, {
 		method: "GET",
@@ -133,7 +136,7 @@ async function getNewRefreshedTokens(refreshToken) {
 }
 
 async function getUserInfo(accessToken) {
-	const url = `http://127.0.0.1:5000/get_user_info?access_token=${accessToken}`;
+	const url = `${base_url}get_user_info?access_token=${accessToken}`;
 
 	const response = await fetch(url, {
 		method: "GET",
