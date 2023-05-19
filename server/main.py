@@ -62,6 +62,9 @@ class Clips(db.Model):
 client_id=os.getenv('CLIENT_ID')
 client_secret=os.getenv('CLIENT_SECRET')
 
+@app.route('/', methods=['GET'])
+def test():
+    return 'test'
 
 def get_app_access_token(client_id, client_secret):
     url = 'https://id.twitch.tv/oauth2/token'

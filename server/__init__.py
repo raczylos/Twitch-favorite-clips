@@ -6,7 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 
 def create_app():
     app = Flask(__name__)
-    CORS(app, origins='https://twitch-favorite-clips-api.onrender.com')
+    CORS(app)
     load_dotenv()
     # db_username = "favorite_clips_user"
     # db_password = "Cg1AXpemTUJnrsnjIjoKHQjxp9aARw2x"
