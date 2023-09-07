@@ -1,6 +1,6 @@
 
-const base_url = "https://twitch-favorite-clips-api.onrender.com/"
-// const base_url = "http://127.0.0.1:5000/"
+// const base_url = "https://twitch-favorite-clips-api.onrender.com/"
+const base_url = "http://127.0.0.1:5000/"
 
 async function addClip(userId, clipId) {
 	const url = `${base_url}add_clip_to_favorites?user_id=${userId}&clip_id=${clipId}`;
@@ -123,6 +123,7 @@ function waitForElm(selector) {
 }
 
 async function addButtonOnCreatedClip(userId) {
+	console.log("addButtonOnCreatedClip");
 	const clipId = getClipId();
 	console.log("clipId is", clipId);
 	// if (!clipId) return;
@@ -131,7 +132,7 @@ async function addButtonOnCreatedClip(userId) {
 	const isClipInFavorites = await isUserClipInFavorites(userId, clipId);
 	console.log("isClipInFavorites", isClipInFavorites);
 
-	const container = await waitForElm(".Layout-sc-1xcs6mc-0.jJplWu");
+	const container = await waitForElm(".Layout-sc-1xcs6mc-0.dlqOrZ");
 
 	const addClipButtonStyle = "add-to-favorite-button-in-created-clip";
 	const removeClipButtonStyle = "remove-from-favorite-button-in-created-clip";
@@ -144,10 +145,13 @@ async function addButtonOnCreatedClip(userId) {
 }
 
 async function addButtonWhenCreatingClip(userId) {
+	console.log("addButtonWhenCreatingClip");
 	const publishButton = await waitForElm("button.ScCoreButtonPrimary-sc-ocjdkq-1");
 
+	console.log("publishButton");
+	console.log(publishButton);
+
 	publishButton.addEventListener("click", async function () {
-		console.log("xdd");
 		// const inputElement = await waitForElm(".ScInputBase-sc-vu7u7d-0.ScInput-sc-19xfhag-0.gXVFsI.iXedIZ.InjectLayout-sc-1i43xsx-0.gWmDFd.tw-input");
 		// const inputElement = await waitForElm(".ScInputBase-sc-vu7u7d-0.ScInput-sc-19xfhag-0");
 		const inputElement = await waitForElm('[data-a-target="tw-input"][readonly]');
@@ -158,8 +162,10 @@ async function addButtonWhenCreatingClip(userId) {
 		const clipId = clipUrl.split("/")[3];
 
 		console.log("clipId", clipId);
-		
-		const container = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
+
+		// const container = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
+		const container = await waitForElm(".Layout-sc-1xcs6mc-0.gEFaca");
+
 		container.classList.add("add-to-favorite-button-container");
 		// const container = await waitForElm(".Layout-sc-1xcs6mc-0.dphleo.clips-sidebar-info");
 		const isClipInFavorites = await isUserClipInFavorites(userId, clipId);
@@ -176,6 +182,11 @@ async function addButtonWhenCreatingClip(userId) {
 }
 
 async function addToFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle) {
+	if (document.querySelector(addClipButtonStyle)) {
+		console.log("add button already exists");
+		return;
+	}
+
 	const favoriteButton = document.createElement("button");
 
 	favoriteButton.innerText = "Add to favorite";
@@ -183,8 +194,6 @@ async function addToFavoriteButton(userId, clipId, container, addClipButtonStyle
 
 	favoriteButton.addEventListener("click", async () => {
 		if (!userId) {
-			// "simplebar-scroll-content"
-
 			const warningAlert = document.createElement("div");
 			warningAlert.classList.add("alert", "alert-dismissible", "fade", "show", "alert-warning");
 			warningAlert.setAttribute("role", "alert");
@@ -224,6 +233,11 @@ async function addToFavoriteButton(userId, clipId, container, addClipButtonStyle
 }
 
 async function removeFromFavoriteButton(userId, clipId, container, addClipButtonStyle, removeClipButtonStyle) {
+	if (document.querySelector(removeClipButtonStyle)) {
+		console.log("remove button already exist");
+		return;
+	}
+
 	const removeFromFavorite = document.createElement("button");
 
 	removeFromFavorite.innerText = "remove from favorite";
@@ -258,9 +272,8 @@ async function getUsername(accessToken) {
 
 			const newAccessToken = await refreshAccessToken(refreshToken);
 			if (newAccessToken) {
-				init(accessToken);
+				init(newAccessToken);
 				// location.reload()
-				return null;
 			}
 		});
 	}
@@ -272,29 +285,45 @@ async function getUsername(accessToken) {
 
 // name to change
 function init(accessToken) {
-	console.log("init")
+	console.log("init");
 	getUsername(accessToken).then((username) => {
 		let userId = username;
 		// if (username) {
-		// 	addButton(userId);
+		// 	addButton(userId);n
 		// }
+		console.log("after init");
 		addButton(userId);
 	});
 }
 
 function addButton(userId) {
+	console.log("addButton");
+
+	const addButtonList = document.querySelectorAll('[class*="add-to-favorite-button"]');
+
+	const removeButtonList = document.querySelectorAll('[class*="remove-from-favorite-button"]');
+
+	if (addButtonList.length != 0 || removeButtonList.length != 0) {
+		addButtonList.remove();
+		removeButtonList.remove();
+		return;
+	}
+
 	if (window.location.href === "https://clips.twitch.tv/create") {
-		console.log("https://clips.twitch.tv/create");
+		console.log("addButtonWhenCreatingClip");
 		addButtonWhenCreatingClip(userId);
 	} else {
+		console.log("addButtonOnCreatedClip");
 		addButtonOnCreatedClip(userId);
 	}
 }
 
 async function recommendationClickHandler(accessToken) {
-	console.log("recommendationClickHandler")
+	console.log("recommendationClickHandler");
 	// popular clips recommended by twitch
-	const popularClipsDiv = await waitForElm(".Layout-sc-1xcs6mc-0.hJwsAI");
+
+	// const popularClipsDiv = await waitForElm(".Layout-sc-1xcs6mc-0.hJwsAI");
+	const popularClipsDiv = await waitForElm(".Layout-sc-1xcs6mc-0.ghhWpt");
 
 	popularClipsDiv.addEventListener("click", function (event) {
 		if (event.target.closest("a")) {
@@ -315,13 +344,13 @@ async function recommendationClickHandler(accessToken) {
 }
 
 chrome.storage.local.get(["accessToken"]).then((result) => {
-	console.log("first")
+	// console.log("1");
 	let accessToken = result.accessToken;
 	init(accessToken);
-
+	recommendationClickHandler(accessToken);
 });
 
-recommendationClickHandler(accessToken);
+
 
 
 

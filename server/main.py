@@ -10,36 +10,39 @@ from dotenv import load_dotenv
 
 # from run import db, app
 
-# app = Flask(__name__)
-# CORS(app)
-
-# # load .env variables
-# load_dotenv()
-
-# # app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///favorites.db'
-
-# db_username = os.getenv('USERNAME')
-# db_password = os.getenv('PASSWORD')
-# db_url = os.getenv('DATABASE_URL')
-
-
-# # app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_username}:{db_password}@localhost/favorite_clips' 
-# app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-
-
-
-# db = SQLAlchemy(app)
-
 app = Flask(__name__)
 CORS(app)
+
+# load .env variables
 load_dotenv()
+
+# app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///favorites.db'
+
+db_username = os.getenv('USERNAME')
+db_password = os.getenv('PASSWORD')
 db_url = os.getenv('DATABASE_URL')
-app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+
+
+app.config['SQLALCHEMY_DATABASE_URI'] = f'postgresql://{db_username}:{db_password}@localhost/favorite_clips' 
+
+
+
 
 db = SQLAlchemy(app)
 
+# RENDER DB 
+# app = Flask(__name__)
+# CORS(app)
+# load_dotenv()
+# db_url = os.getenv('DATABASE_URL')
+# app.config['SQLALCHEMY_DATABASE_URI'] = db_url
+
+# db = SQLAlchemy(app)
+# RENDER DB END
+
 with app.app_context():
     db.create_all()
+
 
 
 
@@ -54,7 +57,7 @@ class Clips(db.Model):
     clip_title = db.Column(db.String, nullable=False)
     clip_duration = db.Column(db.Integer, nullable=False)
     thumbnail_url = db.Column(db.String, nullable=False)
-    created_at = db.Column(db.String, nullable=False)
+    created_at = db.Column(db.DateTime , nullable=False)
     clip_url = db.Column(db.String, nullable=False)
 
     def __init__(self, clip_id, user_id, creator_name, broadcaster_name, clip_title, clip_duration, thumbnail_url, created_at, clip_url):
@@ -71,10 +74,6 @@ class Clips(db.Model):
 
 client_id=os.getenv('CLIENT_ID')
 client_secret=os.getenv('CLIENT_SECRET')
-
-@app.route('/', methods=['GET'])
-def test():
-    return 'test'
 
 def get_app_access_token(client_id, client_secret):
     url = 'https://id.twitch.tv/oauth2/token'
@@ -314,8 +313,8 @@ with app.app_context():
 
 
 
-# if __name__ == '__main__':
-#     app.run(host='twitch-favorite-clips-api.onrender.com', debug=True)
+if __name__ == '__main__':
+    app.run(debug=True)
     
 
 # flask --app bot  run --cert=cert.pem --key=key.pem

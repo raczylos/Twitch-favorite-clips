@@ -7,8 +7,8 @@
 
     <title>popup</title>
     <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
-    
+    <!-- <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css"> -->
+    <link rel="stylesheet" href="./css/main.min.css">
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
 
@@ -48,7 +48,27 @@
             </div>
         </nav>
         
-        <div id="clips-container"> </div>
+        <div id="clips-container">
+
+        </div>
+
+        <div class="modal fade" id="confirmationModal" tabindex="-1" aria-labelledby="confirmationModalLabel" aria-hidden="true" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content bg-dark">
+                    <div class="modal-header">
+                        <h1 class="modal-title fs-5" id="confirmationModalLabel">Confirmation delete</h1>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure want to delete clip?
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button id="confirmationDeleteButton" type="button" class="btn btn-primary red-bg-color">Delete</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     
         <div id="pagination-container">
             <nav>

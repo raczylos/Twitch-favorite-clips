@@ -1,9 +1,12 @@
 html, body {
-    min-width: 550px;
+    /* min-width: 550px;
     min-height: 350px;
 
     max-width: 550px;
-    max-height: 350px;
+    max-height: 350px; */
+    width: 550px;
+    height: 470px;
+    padding-right: 0px !important;
   
 }
 
@@ -13,11 +16,12 @@ html, body {
 }
 
 .navbar-bg {
-    background-color: #161616;
+    background-color: #111111;
 }
 
 #clips-container > .card {
-    background-color: #121212;
+    /* background-color: #121212; */
+    background-color: #141414;
 }
 
 .pagination > li > button
@@ -96,7 +100,7 @@ html, body {
 .add-to-favorite-button-in-created-clip {
     background-color: #9147ff;
     /* margin: 5px; */
-    margin-right: 0px;
+    /* margin-right: 5px; */
    
     width: fit-content;
     /* display: block; */
@@ -113,8 +117,8 @@ html, body {
 
 .remove-from-favorite-button-in-created-clip {
     background-color: #cf2f06;
-    margin-right: 0px;
-    margin-left: 6px;
+    /* margin-right: 0px;
+    margin-left: 6px; */
     /* margin-left: 0px;
     margin-top: 10px; */
     /* display: block; */
@@ -207,7 +211,9 @@ html, body {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100vh  
+    /* height: 100vh; */
+    width: 550px;
+    height: 400px;
 }
 
 .clip-title {
@@ -238,6 +244,17 @@ html, body {
     
 }
 
+.card-body {
+    display: flex;
+    align-items: center;
+  }
+  
+.clip-duration,
+.clip-broadcaster {
+    display: flex;
+    align-items: center;
+    margin-right: 10px; 
+}
 
 #login-button {
     position: absolute;
@@ -292,4 +309,29 @@ html, body {
     font-size: 1.3em;
 }
 
+.modal {
+    text-align: center;
+  }
 
+.modal-dialog {
+    min-width: 350px;
+    display: inline-block;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.show-when-logged-in > .modal.fade.show {
+    padding-right: 0px;
+}
+
+.red-bg-color {
+    background-color: #cf2f06;
+}
+
+.clip-duration .bi-clock {
+    color: #52528C;
+}
+
+.clip-broadcaster .bi-broadcast {
+    color: #52528C;
+}

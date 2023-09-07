@@ -1,5 +1,5 @@
-const base_url = "https://twitch-favorite-clips-api.onrender.com/"
-// const base_url = "http://127.0.0.1:5000/"
+// const base_url = "https://twitch-favorite-clips-api.onrender.com/"
+const base_url = "http://127.0.0.1:5000/"
 
 function waitForElm(selector) {
 	return new Promise((resolve) => {
@@ -149,6 +149,8 @@ async function getUserInfo(accessToken) {
 }
 
 async function loadPage(searchQuery) {
+	showSpinner();
+
 	let clipCount;
 	if (searchQuery) {
 		clipCount = await searchFavoriteClipCount(userId, searchQuery);
@@ -163,11 +165,13 @@ async function loadPage(searchQuery) {
 		currentPage = totalPages;
 	}
 
-	displayPagination(totalPages, searchQuery);
-
 	document.getElementById("clips-container").innerHTML = ""; // clear container
 
-	displayFavoriteClips(userId, searchQuery);
+	await displayFavoriteClips(userId, searchQuery);
+
+	displayPagination(totalPages, searchQuery);
+
+	hideSpinner();
 
 	const prevItem = document.getElementById("prev-btn-li");
 	const nextItem = document.getElementById("next-btn-li");
@@ -187,6 +191,8 @@ async function loadPage(searchQuery) {
 	} else {
 		nextItem.classList.remove("disabled");
 	}
+
+	
 }
 
 function createPagination(totalPages, paginationList, searchQuery) {
@@ -325,6 +331,8 @@ function displayPagination(totalPages, searchQuery) {
 	paginationList.appendChild(paginationListItemNext);
 
 	paginationContainer.appendChild(paginationList);
+
+	hideSpinner();
 }
 
 async function displayFavoriteClips(userId, searchQuery) {
@@ -336,7 +344,6 @@ async function displayFavoriteClips(userId, searchQuery) {
 		noClipsMsg.textContent = "No clips found :(";
 
 		noClipsMsg.style.margin = "auto";
-
 		clipsContainer.appendChild(noClipsMsg);
 		return;
 	}
@@ -372,11 +379,47 @@ async function displayFavoriteClips(userId, searchQuery) {
 		const cardBody = document.createElement("div");
 		cardBody.classList.add("card-body");
 
+		clipBroadcaster(clip.broadcaster_name, cardBody);
+		clipDuration(clip.clip_duration, cardBody);
+		
+
 		removeClipInPopup(userId, clip.clip_id, clipContainer, cardBody);
 		copyToClipboard(clipContainer, clip.clip_url, cardBody);
 
 		clipsContainer.appendChild(clipContainer);
 	});
+}
+
+function clipDuration(clipDuration, cardBody) {
+	let clipDurationContainer = document.createElement("div");
+	clipDurationContainer.classList.add("clip-duration");
+
+	let durationIcon = document.createElement("span");
+	durationIcon.classList.add("bi", "bi-clock");
+
+	let durationText = document.createElement("span");
+	durationText.textContent = clipDuration + "s";
+
+	clipDurationContainer.appendChild(durationIcon);
+	clipDurationContainer.appendChild(durationText);
+
+	cardBody.appendChild(clipDurationContainer);
+}
+
+function clipBroadcaster(clipBroadcaster, cardBody) {
+	let clipBroadcasterContainer = document.createElement("div");
+	clipBroadcasterContainer.classList.add("clip-broadcaster");
+
+	let broadcasterIcon = document.createElement("span");
+	broadcasterIcon.classList.add("bi", "bi-broadcast");
+
+	let broadcasterText = document.createElement("span");
+	broadcasterText.textContent = clipBroadcaster;
+
+	clipBroadcasterContainer.appendChild(broadcasterIcon);
+	clipBroadcasterContainer.appendChild(broadcasterText);
+
+	cardBody.appendChild(clipBroadcasterContainer);
 }
 
 function copyToClipboard(clipContainer, url, cardBody) {
@@ -424,6 +467,28 @@ function copyToClipboard(clipContainer, url, cardBody) {
 	});
 }
 
+// async function removeClipInPopup(userId, clipId, clipContainer, cardBody) {
+// 	const removeFromFavoriteButton = document.createElement("button");
+
+// 	removeFromFavoriteButton.innerText = "X";
+// 	removeFromFavoriteButton.classList.add("button", "remove-from-favorite-button-in-popup");
+
+// 	removeFromFavoriteButton.addEventListener("click", () => {
+// 		console.log(`Removing clip ${clipId} from favorites!`);
+// 		removeClip(userId, clipId)
+// 			.then((response) => {
+// 				console.log(response);
+// 				// remove existing button
+// 				clipContainer.remove();
+// 				// location.reload();
+// 				loadPage();
+// 			})
+// 			.catch((error) => console.error(error));
+// 	});
+// 	clipContainer.appendChild(cardBody);
+// 	cardBody.appendChild(removeFromFavoriteButton);
+// }
+
 async function removeClipInPopup(userId, clipId, clipContainer, cardBody) {
 	const removeFromFavoriteButton = document.createElement("button");
 
@@ -431,17 +496,35 @@ async function removeClipInPopup(userId, clipId, clipContainer, cardBody) {
 	removeFromFavoriteButton.classList.add("button", "remove-from-favorite-button-in-popup");
 
 	removeFromFavoriteButton.addEventListener("click", () => {
-		console.log(`Removing clip ${clipId} from favorites!`);
-		removeClip(userId, clipId)
-			.then((response) => {
-				console.log(response);
-				// remove existing button
-				clipContainer.remove();
-				// location.reload();
-				loadPage();
-			})
-			.catch((error) => console.error(error));
+		console.log("removeFromFavoriteButton.addEventListener");
+		const confirmationModal = document.getElementById("confirmationModal");
+		const confirmationDeleteButton = document.getElementById("confirmationDeleteButton");
+
+		const confirmationDeleteButtonClickHandler = () => {
+			console.log("confirmationDeleteButton.addEventListener");
+			console.log(`Removing clip ${clipId} from favorites!`);
+			removeClip(userId, clipId)
+				.then((response) => {
+					console.log(response);
+					// remove existing button
+					clipContainer.remove();
+					// location.reload();
+					modal.hide();
+					loadPage();
+				})
+				.catch((error) => console.error(error));
+		};
+
+		confirmationDeleteButton.addEventListener("click", confirmationDeleteButtonClickHandler);
+
+		confirmationModal.addEventListener("hidden.bs.modal", function () {
+			confirmationDeleteButton.removeEventListener("click", confirmationDeleteButtonClickHandler);
+		});
+
+		const modal = new bootstrap.Modal(confirmationModal);
+		modal.show();
 	});
+
 	clipContainer.appendChild(cardBody);
 	cardBody.appendChild(removeFromFavoriteButton);
 }
@@ -574,6 +657,12 @@ function hideSpinner() {
 }
 
 function showSpinner() {
+	const spinnerWrapperExists = document.querySelector("#spinner-wrapper");
+	console.log("spinnerWrapperExists", spinnerWrapperExists);
+	if (spinnerWrapperExists) {
+		return
+	}
+
 	const spinnerWrapper = document.createElement("div");
 	spinnerWrapper.id = "spinner-wrapper";
 
@@ -626,39 +715,34 @@ function loginViaTwitch() {
 }
 
 let currentPage = 1;
-const clipsPerPage = 8;
+const clipsPerPage = 9;
 
 let totalPages;
 
 let userId;
 
-function initPage(accessToken) {
+async function initPage(accessToken) {
 	showSpinner();
 	// loginViaTwitch();
 	document.querySelector(".show-when-logged-out").style.display = "none";
 	document.querySelector(".show-when-logged-in").style.display = "none";
 
-	getUsername(accessToken).then((username) => {
-		console.log("username", username);
-		if (!username) {
-			hideSpinner();
-			document.querySelector(".show-when-logged-out").style.display = "block";
-			document.querySelector(".show-when-logged-in").style.display = "none";
+	let username = await getUsername(accessToken);
 
-			return null;
-		}
-
-		userId = username;
-
-		// searchClickHandler();
-		// resetClickHandler();
-		// logoutButtonHandler();
-
-		loadPage();
+	if (!username) {
 		hideSpinner();
-		document.querySelector(".show-when-logged-out").style.display = "none";
-		document.querySelector(".show-when-logged-in").style.display = "block";
-	});
+		document.querySelector(".show-when-logged-out").style.display = "block";
+		document.querySelector(".show-when-logged-in").style.display = "none";
+
+		return null;
+	}
+
+	userId = username;
+
+	loadPage();
+	// hideSpinner();
+	document.querySelector(".show-when-logged-out").style.display = "none";
+	document.querySelector(".show-when-logged-in").style.display = "block";
 }
 
 let accessToken;
