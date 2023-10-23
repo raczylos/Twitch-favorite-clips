@@ -132,7 +132,11 @@ async function addButtonOnCreatedClip(userId) {
 	const isClipInFavorites = await isUserClipInFavorites(userId, clipId);
 	console.log("isClipInFavorites", isClipInFavorites);
 
-	const container = await waitForElm(".Layout-sc-1xcs6mc-0.dlqOrZ");
+	// parent div has class clips-sidebar and we want to place button on third child div
+	const container = await waitForElm(".clips-sidebar > div:nth-child(3)"); 
+	
+	
+	console.log("container", container)
 
 	const addClipButtonStyle = "add-to-favorite-button-in-created-clip";
 	const removeClipButtonStyle = "remove-from-favorite-button-in-created-clip";
@@ -163,8 +167,8 @@ async function addButtonWhenCreatingClip(userId) {
 
 		console.log("clipId", clipId);
 
-		// const container = await waitForElm(".Layout-sc-1xcs6mc-0.faJCen");
-		const container = await waitForElm(".Layout-sc-1xcs6mc-0.gEFaca");
+		// parent div has class clips-post-edit-sidebar and we want to place button on third child div
+		const container = await waitForElm(".clips-post-edit-sidebar > div:nth-child(2)"); 
 
 		container.classList.add("add-to-favorite-button-container");
 		// const container = await waitForElm(".Layout-sc-1xcs6mc-0.dphleo.clips-sidebar-info");
@@ -344,13 +348,8 @@ async function recommendationClickHandler(accessToken) {
 }
 
 chrome.storage.local.get(["accessToken"]).then((result) => {
-	// console.log("1");
 	let accessToken = result.accessToken;
 	init(accessToken);
 	recommendationClickHandler(accessToken);
 });
-
-
-
-
 

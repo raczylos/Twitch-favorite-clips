@@ -398,6 +398,7 @@ function clipDuration(clipDuration, cardBody) {
 	durationIcon.classList.add("bi", "bi-clock");
 
 	let durationText = document.createElement("span");
+	durationText.classList.add("duration-text");
 	durationText.textContent = clipDuration + "s";
 
 	clipDurationContainer.appendChild(durationIcon);
@@ -414,6 +415,7 @@ function clipBroadcaster(clipBroadcaster, cardBody) {
 	broadcasterIcon.classList.add("bi", "bi-broadcast");
 
 	let broadcasterText = document.createElement("span");
+	broadcasterText.classList.add("broadcaster-text");
 	broadcasterText.textContent = clipBroadcaster;
 
 	clipBroadcasterContainer.appendChild(broadcasterIcon);

@@ -59,8 +59,9 @@ class Clips(db.Model):
     thumbnail_url = db.Column(db.String, nullable=False)
     created_at = db.Column(db.DateTime , nullable=False)
     clip_url = db.Column(db.String, nullable=False)
+    clip_url_embed = db.Column(db.String, nullable=False)
 
-    def __init__(self, clip_id, user_id, creator_name, broadcaster_name, clip_title, clip_duration, thumbnail_url, created_at, clip_url):
+    def __init__(self, clip_id, user_id, creator_name, broadcaster_name, clip_title, clip_duration, thumbnail_url, created_at, clip_url, clip_url_embed):
         self.clip_id = clip_id
         self.user_id = user_id
         self.creator_name = creator_name
@@ -70,6 +71,7 @@ class Clips(db.Model):
         self.thumbnail_url = thumbnail_url
         self.created_at = created_at
         self.clip_url = clip_url
+        self.clip_url_embed = clip_url_embed
         
 
 client_id=os.getenv('CLIENT_ID')
@@ -165,11 +167,12 @@ def add_clip_to_favorites():
     thumbnail_url = clip_info['thumbnail_url']
     created_at = clip_info['created_at']
     clip_url = clip_info['url']
+    clip_url_embed = clip_info['embed_url']
 
     # user_name = user_info['data'][0]['display_name']
     print("clip_info", clip_info)
 
-    clip = Clips(clip_id, user_id, creator_name, broadcaster_name, clip_title, clip_duration, thumbnail_url, created_at, clip_url)
+    clip = Clips(clip_id, user_id, creator_name, broadcaster_name, clip_title, clip_duration, thumbnail_url, created_at, clip_url, clip_url_embed)
     db.session.add(clip)
     db.session.commit()
     return jsonify({'success': True})
@@ -206,6 +209,27 @@ def get_favorite_clips(user_id):
     for clip in clips:
         clip_dict = {
             'clip_id': clip.clip_id,
+            # 'user_id': clip.user_id,
+            # 'creator_name': clip.creator_name,
+            'broadcaster_name': clip.broadcaster_name,
+            'clip_title': clip.clip_title,
+            'clip_duration': clip.clip_duration,
+            'thumbnail_url': clip.thumbnail_url,
+            # 'created_at': clip.created_at,
+            # 'clip_url': clip.clip_url,
+        }
+        clip_list.append(clip_dict)
+    
+    return jsonify(clip_list)
+
+@app.route('/favorite_clip_details/<clip_id>', methods=['GET'])
+def get_favorite_clip_details(clip_id):
+    # clips = Clips.query.filter_by(user_id=user_id).all()
+
+    clip = Clips.query.filter_by(clip_id=clip_id).first()
+    if(clip):
+        clip_dict = {
+            'clip_id': clip.clip_id,
             'user_id': clip.user_id,
             'creator_name': clip.creator_name,
             'broadcaster_name': clip.broadcaster_name,
@@ -214,10 +238,13 @@ def get_favorite_clips(user_id):
             'thumbnail_url': clip.thumbnail_url,
             'created_at': clip.created_at,
             'clip_url': clip.clip_url,
+            'clip_url_embed': clip.clip_url_embed,
         }
-        clip_list.append(clip_dict)
+
+        return jsonify(clip_dict)
+    else:
+        return jsonify({'error': 'Clip not found'}), 404
     
-    return jsonify(clip_list)
 
 @app.route('/is_user_clip_in_favorites', methods=['GET'])
 def is_user_clip_in_favorites():
