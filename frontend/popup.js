@@ -469,27 +469,6 @@ function copyToClipboard(clipContainer, url, cardBody) {
 	});
 }
 
-// async function removeClipInPopup(userId, clipId, clipContainer, cardBody) {
-// 	const removeFromFavoriteButton = document.createElement("button");
-
-// 	removeFromFavoriteButton.innerText = "X";
-// 	removeFromFavoriteButton.classList.add("button", "remove-from-favorite-button-in-popup");
-
-// 	removeFromFavoriteButton.addEventListener("click", () => {
-// 		console.log(`Removing clip ${clipId} from favorites!`);
-// 		removeClip(userId, clipId)
-// 			.then((response) => {
-// 				console.log(response);
-// 				// remove existing button
-// 				clipContainer.remove();
-// 				// location.reload();
-// 				loadPage();
-// 			})
-// 			.catch((error) => console.error(error));
-// 	});
-// 	clipContainer.appendChild(cardBody);
-// 	cardBody.appendChild(removeFromFavoriteButton);
-// }
 
 async function removeClipInPopup(userId, clipId, clipContainer, cardBody) {
 	const removeFromFavoriteButton = document.createElement("button");
@@ -557,35 +536,36 @@ function resetClickHandler() {
 	});
 }
 
+
+
 async function refreshAccessToken(refreshToken) {
 	document.querySelector(".show-when-logged-out").style.display = "none";
 	document.querySelector(".show-when-logged-in").style.display = "none";
 
 	const newTokens = await getNewRefreshedTokens(refreshToken);
 
-	if (newTokens.status === 401) {
-		chrome.storage.local.remove(["accessToken", "refreshToken"], function () {
-			let error = chrome.runtime.lastError;
-			if (error) {
-				console.error(error);
-			}
-		});
+	console.log(newTokens)
+	if (newTokens.status === 401 || newTokens.status === 400) {
+		console.log("in refreshAccessToken error 401 or 400")
+		logout()
 		hideSpinner();
+		initPage();
 		return null;
+	} else {
+		await chrome.storage.local
+			.set({
+				accessToken: newTokens.access_token,
+				refreshToken: newTokens.refresh_token,
+			})
+			.then(() => {
+				console.log("new accessToken is set to " + newTokens.access_token);
+				console.log("new refreshToken is set to " + newTokens.refresh_token);
+			});
+	
+		const newAccessToken = newTokens.access_token;
+	
+		return newAccessToken;
 	}
-	await chrome.storage.local
-		.set({
-			accessToken: newTokens.access_token,
-			refreshToken: newTokens.refresh_token,
-		})
-		.then(() => {
-			console.log("new accessToken is set to " + newTokens.access_token);
-			console.log("new refreshToken is set to " + newTokens.refresh_token);
-		});
-
-	const newAccessToken = newTokens.access_token;
-
-	return newAccessToken;
 }
 
 async function getUsername(accessToken) {
@@ -616,6 +596,7 @@ async function getUsername(accessToken) {
 
 async function login(code) {
 	// const code = await getAuthorizeCode()
+	console.log("code2", code)
 	const tokens = await getUserTokens(code);
 	console.log(tokens);
 	if (tokens) {
@@ -651,7 +632,7 @@ function logoutButtonHandler() {
 
 function hideSpinner() {
 	const spinnerWrapper = document.getElementById("spinner-wrapper");
-	const spinner = spinnerWrapper.querySelector(".spinner-border");
+	const spinner = spinnerWrapper.querySelector(".spinner-border"); 
 
 	if (spinner) {
 		spinnerWrapper.remove();
@@ -704,6 +685,7 @@ function loginViaTwitch() {
 				if (tab.url.indexOf("code=") >= 0) {
 					let url = tab.url;
 					let code = url.substring(url.indexOf("code=") + 5, url.indexOf("&scope"));
+					console.log("code1", code)
 					login(code);
 					popupWindow.close();
 
@@ -725,7 +707,6 @@ let userId;
 
 async function initPage(accessToken) {
 	showSpinner();
-	// loginViaTwitch();
 	document.querySelector(".show-when-logged-out").style.display = "none";
 	document.querySelector(".show-when-logged-in").style.display = "none";
 
@@ -735,21 +716,21 @@ async function initPage(accessToken) {
 		hideSpinner();
 		document.querySelector(".show-when-logged-out").style.display = "block";
 		document.querySelector(".show-when-logged-in").style.display = "none";
-
-		return null;
-	}
-
+		loginViaTwitch();
+		return;
+	} 
 	userId = username;
 
 	loadPage();
 	// hideSpinner();
 	document.querySelector(".show-when-logged-out").style.display = "none";
 	document.querySelector(".show-when-logged-in").style.display = "block";
+
 }
 
 let accessToken;
 
-loginViaTwitch();
+// loginViaTwitch();
 searchClickHandler();
 resetClickHandler();
 logoutButtonHandler();

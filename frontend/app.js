@@ -74,32 +74,34 @@ function getClipId() {
 	return clipId;
 }
 
+function logout() {
+	chrome.storage.local.remove(["accessToken", "refreshToken"], () => {
+		console.log("Access token and refresh token removed.");
+	});
+}
+
 async function refreshAccessToken(refreshToken) {
 	const newTokens = await getNewRefreshedTokens(refreshToken);
-	console.log("refreshAccessToken", newTokens)
-	if (newTokens.status === 401) {
-		chrome.storage.local.remove(["accessToken", "refreshToken"], function () {
-			let error = chrome.runtime.lastError;
-			if (error) {
-				console.error(error);
-			}
-		});
+	console.log("refreshAccessToken", newTokens);
+	if (newTokens.status === 401 && newTokens.status === 400) {
+		logout();
 
 		return null;
+	} else {
+		await chrome.storage.local
+			.set({
+				accessToken: newTokens.access_token,
+				refreshToken: newTokens.refresh_token,
+			})
+			.then(() => {
+				console.log("new accessToken is set to " + newTokens.access_token);
+				console.log("new refreshToken is set to " + newTokens.refresh_token);
+			});
+
+		const newAccessToken = newTokens.access_token;
+
+		return newAccessToken;
 	}
-	await chrome.storage.local
-		.set({
-			accessToken: newTokens.access_token,
-			refreshToken: newTokens.refresh_token,
-		})
-		.then(() => {
-			console.log("new accessToken is set to " + newTokens.access_token);
-			console.log("new refreshToken is set to " + newTokens.refresh_token);
-		});
-
-	const newAccessToken = newTokens.access_token;
-
-	return newAccessToken;
 }
 
 function waitForElm(selector) {
@@ -206,8 +208,7 @@ async function addToFavoriteButton(userId, clipId, container, addClipButtonStyle
 				<div class="alert alert-danger" role="alert">
 				  	<strong>Warning!</strong> Please login in the extension popup to add clip to favorite and then refresh the page.
 				  	<button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-				</div>
-			`;
+				</div>`;
 
 			const bootstrapScript = document.createElement("script");
 			bootstrapScript.src = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.min.js";
@@ -326,8 +327,9 @@ async function recommendationClickHandler(accessToken) {
 	console.log("recommendationClickHandler");
 	// popular clips recommended by twitch
 
-	// const popularClipsDiv = await waitForElm(".Layout-sc-1xcs6mc-0.hJwsAI");
-	const popularClipsDiv = await waitForElm(".Layout-sc-1xcs6mc-0.ghhWpt");
+	const popularClipsDiv = await waitForElm(".clips-watch > .tw-animation > div:nth-child(3)");
+	console.log("popularClipsDiv", popularClipsDiv);
+	// const popularClipsDiv = await waitForElm(".Layout-sc-1xcs6mc-0.ghhWpt");
 
 	popularClipsDiv.addEventListener("click", function (event) {
 		if (event.target.closest("a")) {
@@ -353,3 +355,4 @@ chrome.storage.local.get(["accessToken"]).then((result) => {
 	recommendationClickHandler(accessToken);
 });
 
+// do login

@@ -115,7 +115,7 @@ def refresh_access_token():
             'refresh_token': refresh_token}
     response = requests.post(url, data=data)
     tokens = response.json()
-    print(tokens)
+    print("tokens", tokens)
     return tokens
 
 app_access_token= get_app_access_token(client_id, client_secret)
