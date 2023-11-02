@@ -148,6 +148,8 @@ async function getUserInfo(accessToken) {
 	return userInfo;
 }
 
+
+
 async function loadPage(searchQuery) {
 	showSpinner();
 
@@ -191,8 +193,6 @@ async function loadPage(searchQuery) {
 	} else {
 		nextItem.classList.remove("disabled");
 	}
-
-	
 }
 
 function createPagination(totalPages, paginationList, searchQuery) {
@@ -381,7 +381,6 @@ async function displayFavoriteClips(userId, searchQuery) {
 
 		clipBroadcaster(clip.broadcaster_name, cardBody);
 		clipDuration(clip.clip_duration, cardBody);
-		
 
 		removeClipInPopup(userId, clip.clip_id, clipContainer, cardBody);
 		copyToClipboard(clipContainer, clip.clip_url, cardBody);
@@ -394,15 +393,15 @@ function clipDuration(clipDuration, cardBody) {
 	let clipDurationContainer = document.createElement("div");
 	clipDurationContainer.classList.add("clip-duration");
 
-	let durationIcon = document.createElement("span");
-	durationIcon.classList.add("bi", "bi-clock");
+	// let durationIcon = document.createElement("span");
+	// durationIcon.classList.add("bi", "bi-clock");
 
-	let durationText = document.createElement("span");
-	durationText.classList.add("duration-text");
-	durationText.textContent = clipDuration + "s";
+	// let durationText = document.createElement("span");
+	// durationText.classList.add("duration-text");
+	// durationText.textContent = clipDuration + "s";
 
-	clipDurationContainer.appendChild(durationIcon);
-	clipDurationContainer.appendChild(durationText);
+	// clipDurationContainer.appendChild(durationIcon);
+	// clipDurationContainer.appendChild(durationText);
 
 	cardBody.appendChild(clipDurationContainer);
 }
@@ -416,7 +415,8 @@ function clipBroadcaster(clipBroadcaster, cardBody) {
 
 	let broadcasterText = document.createElement("span");
 	broadcasterText.classList.add("broadcaster-text");
-	broadcasterText.textContent = clipBroadcaster;
+	const cutClipBroadcaster = cutString(clipBroadcaster, 12);
+	broadcasterText.textContent = cutClipBroadcaster;
 
 	clipBroadcasterContainer.appendChild(broadcasterIcon);
 	clipBroadcasterContainer.appendChild(broadcasterText);
@@ -469,7 +469,6 @@ function copyToClipboard(clipContainer, url, cardBody) {
 	});
 }
 
-
 async function removeClipInPopup(userId, clipId, clipContainer, cardBody) {
 	const removeFromFavoriteButton = document.createElement("button");
 
@@ -514,29 +513,38 @@ function searchClickHandler() {
 	const searchButton = document.getElementById("search-button");
 
 	searchButton.addEventListener("click", async () => {
+		const paginationContainer = document.getElementById("pagination-container");
+
+		paginationContainer.style.display = "none";
+
 		console.log("searchButton.addEventListener");
 		event.preventDefault();
 		currentPage = 1;
 
 		const searchQuery = document.getElementById("search-input");
 
-		loadPage(searchQuery.value);
+		await loadPage(searchQuery.value);
+
+		paginationContainer.style.display = "block";
 	});
 }
 
 function resetClickHandler() {
 	const resetButton = document.getElementById("reset-button");
 	resetButton.addEventListener("click", async () => {
+		const paginationContainer = document.getElementById("pagination-container");
+
+		paginationContainer.style.display = "none";
+
 		event.preventDefault();
 		const searchQuery = document.getElementById("search-input");
 		searchQuery.value = "";
 		currentPage = 1;
-		// displayPagination(totalPages);
-		loadPage();
+		await loadPage();
+
+		paginationContainer.style.display = "block";
 	});
 }
-
-
 
 async function refreshAccessToken(refreshToken) {
 	document.querySelector(".show-when-logged-out").style.display = "none";
@@ -544,10 +552,10 @@ async function refreshAccessToken(refreshToken) {
 
 	const newTokens = await getNewRefreshedTokens(refreshToken);
 
-	console.log(newTokens)
+	console.log(newTokens);
 	if (newTokens.status === 401 || newTokens.status === 400) {
-		console.log("in refreshAccessToken error 401 or 400")
-		logout()
+		console.log("in refreshAccessToken error 401 or 400");
+		logout();
 		hideSpinner();
 		initPage();
 		return null;
@@ -561,9 +569,9 @@ async function refreshAccessToken(refreshToken) {
 				console.log("new accessToken is set to " + newTokens.access_token);
 				console.log("new refreshToken is set to " + newTokens.refresh_token);
 			});
-	
+
 		const newAccessToken = newTokens.access_token;
-	
+
 		return newAccessToken;
 	}
 }
@@ -596,7 +604,7 @@ async function getUsername(accessToken) {
 
 async function login(code) {
 	// const code = await getAuthorizeCode()
-	console.log("code2", code)
+	console.log("code2", code);
 	const tokens = await getUserTokens(code);
 	console.log(tokens);
 	if (tokens) {
@@ -620,6 +628,17 @@ function logout() {
 	});
 }
 
+function cutString(string, length) {
+	if (!string) {
+		return "";
+	}
+
+	if (string.length > length) {
+		return string.substring(0, length) + "...";
+	}
+	return string;
+}
+
 function logoutButtonHandler() {
 	const logoutButton = document.querySelector("#logout-button");
 
@@ -632,7 +651,7 @@ function logoutButtonHandler() {
 
 function hideSpinner() {
 	const spinnerWrapper = document.getElementById("spinner-wrapper");
-	const spinner = spinnerWrapper.querySelector(".spinner-border"); 
+	const spinner = spinnerWrapper.querySelector(".spinner-border");
 
 	if (spinner) {
 		spinnerWrapper.remove();
@@ -643,7 +662,7 @@ function showSpinner() {
 	const spinnerWrapperExists = document.querySelector("#spinner-wrapper");
 	console.log("spinnerWrapperExists", spinnerWrapperExists);
 	if (spinnerWrapperExists) {
-		return
+		return;
 	}
 
 	const spinnerWrapper = document.createElement("div");
@@ -685,7 +704,7 @@ function loginViaTwitch() {
 				if (tab.url.indexOf("code=") >= 0) {
 					let url = tab.url;
 					let code = url.substring(url.indexOf("code=") + 5, url.indexOf("&scope"));
-					console.log("code1", code)
+					console.log("code1", code);
 					login(code);
 					popupWindow.close();
 
@@ -716,21 +735,20 @@ async function initPage(accessToken) {
 		hideSpinner();
 		document.querySelector(".show-when-logged-out").style.display = "block";
 		document.querySelector(".show-when-logged-in").style.display = "none";
-		loginViaTwitch();
+		// loginViaTwitch();
 		return;
-	} 
+	}
 	userId = username;
 
 	loadPage();
 	// hideSpinner();
 	document.querySelector(".show-when-logged-out").style.display = "none";
 	document.querySelector(".show-when-logged-in").style.display = "block";
-
 }
 
 let accessToken;
 
-// loginViaTwitch();
+loginViaTwitch();
 searchClickHandler();
 resetClickHandler();
 logoutButtonHandler();
