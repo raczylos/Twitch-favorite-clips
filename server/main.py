@@ -332,6 +332,14 @@ def authorize():
         return "Logged in successfully. You can close this page."
     return "Something went wrong. Try again."
 
+@app.route('/get_user_follows/<user_id>', methods=['GET'])
+def get_user_follows(user_id):
+    url = 'https://api.twitch.tv/helix/channels/followed?from_id=' + user_id
+    response = requests.get(url, headers=headers)
+    data = response.json()['data']
+    return jsonify(data)
+
+
 
 # create db
 with app.app_context():
